@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   THEME — this is the file you edit to rebrand the site.
+   ==========================================================================
+
+   Everything below is a Tailwind v4 `@theme` block. Each custom property
+   becomes a utility class automatically: `--color-accent` gives you
+   `bg-accent` / `text-accent` / `border-accent`, `--radius-pill` gives you
+   `rounded-pill`, and so on. There is no tailwind.config.ts — this is it.
+
+   TO CHANGE THE COLOURS: edit the `--color-*` values in the palette block.
+   Nothing else references a raw colour, so recolouring the whole site is a
+   single edit here. The names are roles, not hues, so a dark or colourful
+   brand slots in without renaming anything.
+
+   TO CHANGE THE FONTS: edit `--font-display` and `--font-sans` below, and
+   change the two `next/font` imports at the top of `src/app/layout.tsx` to
+   match. Those imports define the `--font-display-src` / `--font-sans-src`
+   variables the values here point at.
+   ========================================================================== */
+
+@theme {
+  /* --- Palette -----------------------------------------------------------
+     Ships as neutral Tailwind slate so a fresh project looks like plain
+     Tailwind rather than someone else's brand. Swap these twelve values.
+
+     surface / surface-alt : page and panel backgrounds
+     fg / muted / subtle   : text, in descending emphasis
+     inverse / inverse-fg  : dark bands and the text that sits on them
+     accent*               : soft fills, tags, quiet highlights
+     brand*                : primary buttons and the loudest UI
+     ---------------------------------------------------------------------- */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafc;
+
+  --color-fg: #0f172a;
+  --color-muted: #475569;
+  --color-subtle: #94a3b8;
+
+  --color-inverse: #0f172a;
+  --color-inverse-fg: #f8fafc;
+
+  --color-accent: #e2e8f0;
+  --color-accent-deep: #cbd5e1;
+  --color-accent-strong: #0284c7;
+
+  --color-brand: #0f172a;
+  --color-brand-hover: #1e293b;
+  --color-brand-deep: #334155;
+  --color-brand-fg: #f8fafc;
+
+  /* --- Typography --------------------------------------------------------
+     `--font-display` is used by h1/h2/h3 (see the base layer below).
+     `--font-sans` is everything else. Both fall back to system fonts if the
+     next/font variable is missing, so the site still renders during setup.
+     ---------------------------------------------------------------------- */
+  --font-display: var(--font-display-src), Georgia, "Times New Roman", serif;
+  --font-sans:
+    var(--font-sans-src), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+
+  /* Named sizes for the recurring bits of UI, so a heading scale change does
+     not mean hunting through components for magic rem values. */
+  --text-eyebrow: 0.68rem;
+  --text-eyebrow--line-height: 1;
+  --text-eyebrow--letter-spacing: 0.24em;
+  --text-lead: 1.06rem;
+  --text-lead--line-height: 1.7;
+  --text-nav: 0.845rem;
+  --text-nav--line-height: 1.2;
+  --text-nav--letter-spacing: 0.01em;
+  --text-btn: 0.9rem;
+  --text-btn--line-height: 1.2;
+  --text-btn--letter-spacing: 0.01em;
+  --text-btn-sm: 0.84rem;
+  --text-btn-sm--line-height: 1.2;
+  --text-btn-sm--letter-spacing: 0.01em;
+  --text-arrow: 0.86rem;
+  --text-arrow--line-height: 1.2;
+  --text-arrow--letter-spacing: 0.02em;
+
+  /* --- Layout ------------------------------------------------------------
+     `wrap` is the page gutter (used by <Wrap>), `section` the vertical
+     rhythm between blocks. The `-sm` / `-md` variants are the responsive
+     steps down. Widen `--container-site` for a roomier site.
+     ---------------------------------------------------------------------- */
+  --spacing-wrap: 44px;
+  --spacing-wrap-md: 24px;
+  --spacing-wrap-sm: 20px;
+  --spacing-section: 130px;
+  --spacing-section-sm: 82px;
+
+  --container-site: 1280px;
+
+  /* Breakpoints deliberately differ from the Tailwind defaults — the layouts
+     in src/components are built against these. Change with care. */
+  --breakpoint-xs: 400px;
+  --breakpoint-sm: 760px;
+  --breakpoint-md: 960px;
+  --breakpoint-lg: 1120px;
+  --breakpoint-xl: 1360px;
+
+  /* --- Shape and motion -------------------------------------------------- */
+  --radius-pill: 100px;
+  --radius-arch: 220px 220px 4px 4px;
+
+  --shadow-stamp: 0 18px 46px -22px rgb(15 23 42 / 0.5);
+  --shadow-card: 0 30px 58px -34px rgb(15 23 42 / 0.42);
+  --shadow-topbar: 0 1px 0 rgb(15 23 42 / 0.09);
+
+  --ease-brand: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --animate-hero-cycle: hero-cycle 22.5s infinite;
+  --animate-cue: cue 2.4s infinite;
+  --animate-spin-in: spin-in 0.9s var(--ease-brand) both;
+
+  @keyframes hero-cycle {
+    0% {
+      opacity: 0;
+      transform: scale(1.07);
+    }
+    4% {
+      opacity: 1;
+    }
+    30% {
+      opacity: 1;
+    }
+    36% {
+      opacity: 0;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes cue {
+    0%,
+    100% {
+      transform: scaleY(0.4);
+      transform-origin: top;
+    }
+    50% {
+      transform: scaleY(1);
+      transform-origin: top;
+    }
+  }
+
+  @keyframes spin-in {
+    from {
+      opacity: 0;
+      transform: scale(0.7) rotate(-16deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply overflow-x-hidden bg-surface font-sans text-fg antialiased;
+    font-size: 16px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-normal leading-[1.02] tracking-[-0.02em];
+  }
+
+  ::selection {
+    @apply bg-accent text-fg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

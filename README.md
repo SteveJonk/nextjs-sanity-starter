@@ -314,6 +314,33 @@ studio/
                       (site information, navigation, footer)
 ```
 
+## Deploying the studio
+
+`.github/workflows/deploy-sanity-studio.yml` builds and deploys the studio on
+every push to `main` that touches `studio/`, and can be run by hand from the
+Actions tab. One deploy at a time — a new push cancels a run in progress.
+
+Configure it once, under **Settings → Secrets and variables → Actions**:
+
+| Where          | Name                       | Needed?  | What it is                                                        |
+| -------------- | -------------------------- | -------- | ----------------------------------------------------------------- |
+| Secrets        | `SANITY_AUTH_TOKEN`        | yes      | Deploy token — sanity.io/manage → API → Tokens, or `npx sanity login` and copy from `~/.config/sanity` |
+| Variables      | `SANITY_STUDIO_PROJECT_ID` | yes      | Same project id as `studio/.env`                                   |
+| Variables      | `SANITY_STUDIO_DATASET`    | optional | Defaults to `production`                                           |
+| Variables      | `SANITY_STUDIO_TITLE`      | optional | Defaults to `Studio`                                               |
+| Variables      | `SANITY_STUDIO_HOSTNAME`   | optional | Which `*.sanity.studio` to deploy to; unset reuses the existing one |
+
+None of the `SANITY_STUDIO_*` values is a secret — they ship inside the studio
+bundle, which is why they are *variables* and why they are set at job level:
+Vite bakes them in at build time, so setting them only on the deploy step would
+be too late.
+
+The workflow fails early with a pointer to this table when the project id is
+missing, rather than part way through a build.
+
+**The app is not deployed here.** Host it wherever you like — the workflow
+deliberately only covers the studio.
+
 ## Commands
 
 ```bash

@@ -34,4 +34,14 @@ Typegen runs from here because the CLI needs a studio project root, but the
 GROQ it reads and the types it writes belong to the app. Run it after changing
 a schema type; the root `README.md` has the full story.
 
+## Deploying
+
+```bash
+npm run deploy         # deploys to <hostname>.sanity.studio
+```
+
+Pushes to `main` that touch `studio/` deploy automatically through
+`.github/workflows/deploy-sanity-studio.yml`. The root `README.md` lists the
+repository secret and variables it needs.
+
 See the root `README.md` for how a block travels from here to the front end.

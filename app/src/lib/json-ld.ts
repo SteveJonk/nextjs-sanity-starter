@@ -17,14 +17,13 @@
  * any object left empty by that, so a half-filled document never emits
  * `"telephone": null`.
  */
-import { env } from '@/lib/env';
 import { SITE } from '@/lib/site';
 
 export type JsonLdNode = Record<string, unknown>;
 
 /** References between nodes — not the document itself, just the key. */
-export const ORGANIZATION_ID = `${env.siteUrl}/#organization`;
-export const WEBSITE_ID = `${env.siteUrl}/#website`;
+export const ORGANIZATION_ID = `${SITE.url}/#organization`;
+export const WEBSITE_ID = `${SITE.url}/#website`;
 
 const ORGANIZATION_REF = { '@id': ORGANIZATION_ID };
 const WEBSITE_REF = { '@id': WEBSITE_ID };
@@ -33,7 +32,7 @@ const WEBSITE_REF = { '@id': WEBSITE_ID };
 export function absoluteUrl(path = '/'): string {
   if (/^https?:\/\//.test(path)) return path;
   const suffix = path === '/' || path === '' ? '' : `/${path.replace(/^\//, '')}`;
-  return `${env.siteUrl}${suffix}`;
+  return `${SITE.url}${suffix}`;
 }
 
 /**
@@ -136,7 +135,7 @@ export function organizationJsonLd(input: OrganizationInput = {}): JsonLdNode {
     '@type': 'Organization',
     '@id': ORGANIZATION_ID,
     name: input.name ?? SITE.name,
-    url: env.siteUrl,
+    url: SITE.url,
     description: input.description ?? SITE.description,
     telephone: input.phone ?? SITE.phone,
     email: input.email ?? SITE.email,
@@ -150,7 +149,7 @@ export function websiteJsonLd(): JsonLdNode {
   return {
     '@type': 'WebSite',
     '@id': WEBSITE_ID,
-    url: env.siteUrl,
+    url: SITE.url,
     name: SITE.name,
     inLanguage: SITE.language,
     publisher: ORGANIZATION_REF,

@@ -7,6 +7,15 @@
  */
 export const SITE = {
   name: 'Fieldnote',
+  /**
+   * The site's public origin, without a trailing slash.
+   *
+   * The one value here that comes from the environment, because it differs per
+   * deploy: `metadataBase`, the sitemap, `robots.txt` and the structured data
+   * all build absolute URLs from it. The localhost default keeps `npm run dev`
+   * working; set NEXT_PUBLIC_SITE_URL in production.
+   */
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/+$/, ''),
   /** Used as the meta description fallback and the footer strapline. */
   description:
     'A small design and engineering studio. We take on a handful of projects a year and stay on them until they are finished.',

@@ -217,9 +217,8 @@ Two rules are load-bearing and easy to undo by accident:
 npm run check:jsonld    # asserts both rules, plus the shapes above
 ```
 
-That script is pure — no Sanity, no React — so it runs in about a second and
-fails loudly when a shape changes. It reads `app/.env` like the seed scripts do,
-because the graph's `@id`s are built from `NEXT_PUBLIC_SITE_URL`. Structured data is invisible in the browser;
+That script is pure — no Sanity, no React, no `.env` — so it runs on a fresh
+clone in about a second and fails loudly when a shape changes. Structured data is invisible in the browser;
 without something like this you find out weeks later, from Search Console.
 
 To make the company something more specific than a generic `Organization`

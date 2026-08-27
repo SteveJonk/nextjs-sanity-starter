@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { env } from '@/lib/env';
+import { SITE } from '@/lib/site';
 
 /**
  * Served at `/robots.txt`.
@@ -15,6 +15,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/api/',
     },
-    sitemap: `${env.siteUrl}/sitemap.xml`,
+    sitemap: `${SITE.url}/sitemap.xml`,
   };
 }

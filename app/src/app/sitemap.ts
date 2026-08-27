@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
-import { env } from '@/lib/env';
 import { HOME_SLUG, pathForSlug } from '@/lib/links';
+import { SITE } from '@/lib/site';
 import { client } from '@/sanity/client';
 import { PAGE_SLUGS_QUERY } from '@/sanity/queries';
 
@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages = await client.fetch(PAGE_SLUGS_QUERY, {}, options);
 
   return pages.map((page) => ({
-    url: `${env.siteUrl}${pathForSlug(page.slug)}`,
+    url: `${SITE.url}${pathForSlug(page.slug)}`,
     lastModified: new Date(page._updatedAt),
     changeFrequency: 'monthly' as const,
     // The home page is the entry point; the rest sit a level below it.

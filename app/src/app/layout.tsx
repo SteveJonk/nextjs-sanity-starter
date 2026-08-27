@@ -14,7 +14,6 @@ import { JsonLd } from '@/components/JsonLd';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { TrackingScriptsBody, TrackingScriptsHead } from '@/components/TrackingScripts';
-import { env } from '@/lib/env';
 import { siteJsonLd } from '@/lib/json-ld';
 import { toLabeledHref, type SanityLabeledLink } from '@/lib/links';
 import { SITE, type FooterLinkGroup, type NavLink } from '@/lib/site';
@@ -44,7 +43,7 @@ const sans = Inter_Tight({
  * the sitemap and robots routes read the same value.
  */
 export const metadata: Metadata = {
-  metadataBase: new URL(env.siteUrl),
+  metadataBase: new URL(SITE.url),
   title: {
     default: SITE.name,
     template: `%s - ${SITE.name}`,

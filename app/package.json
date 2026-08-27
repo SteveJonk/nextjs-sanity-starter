@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "typegen": "npm --prefix ../studio run typegen",
-    "check:jsonld": "tsx --env-file=.env scripts/check-jsonld.ts",
+    "check:jsonld": "tsx scripts/check-jsonld.ts",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "seed:home": "tsx --env-file=.env scripts/seed.ts home",
     "seed:about": "tsx --env-file=.env scripts/seed.ts about",

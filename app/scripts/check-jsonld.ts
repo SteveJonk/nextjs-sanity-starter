@@ -13,7 +13,6 @@
  * Run with `npm run check:jsonld`. Pure functions only — no Sanity, no React.
  */
 import assert from 'node:assert/strict';
-import { env } from '@/lib/env';
 import {
   ORGANIZATION_ID,
   WEBSITE_ID,
@@ -62,10 +61,10 @@ assert.equal(prune(0), 0, 'a zero is a value, not emptiness');
 assert.equal(prune(false), false);
 assert.equal(jsonLdGraph([null, undefined]), null, 'an empty graph is nothing');
 
-assert.equal(absoluteUrl('/'), env.siteUrl);
-assert.equal(absoluteUrl(''), env.siteUrl);
-assert.equal(absoluteUrl('about'), `${env.siteUrl}/about`);
-assert.equal(absoluteUrl('/about'), `${env.siteUrl}/about`);
+assert.equal(absoluteUrl('/'), SITE.url);
+assert.equal(absoluteUrl(''), SITE.url);
+assert.equal(absoluteUrl('about'), `${SITE.url}/about`);
+assert.equal(absoluteUrl('/about'), `${SITE.url}/about`);
 assert.equal(absoluteUrl('https://elsewhere.example/x'), 'https://elsewhere.example/x');
 
 // 2. Organisation: address parsing, site.ts fallback, CMS values win.
@@ -153,7 +152,7 @@ const about = pageJsonLd({
 });
 const aboutPage = node(about, 'WebPage');
 assert.deepEqual(aboutPage['@type'], ['WebPage', 'FAQPage']);
-assert.equal(aboutPage['@id'], `${env.siteUrl}/about#page`);
+assert.equal(aboutPage['@id'], `${SITE.url}/about#page`);
 assert.equal(aboutPage.inLanguage, SITE.language);
 assert.deepEqual(aboutPage.isPartOf, { '@id': WEBSITE_ID });
 assert.equal((aboutPage.mainEntity as unknown[]).length, 2);
@@ -181,12 +180,12 @@ assert.equal(
 );
 
 // 5. The breadcrumb starts at Home and matches the visible one.
-assert.deepEqual(aboutPage.breadcrumb, { '@id': `${env.siteUrl}/about#breadcrumb` });
+assert.deepEqual(aboutPage.breadcrumb, { '@id': `${SITE.url}/about#breadcrumb` });
 const crumbs = node(about, 'BreadcrumbList');
-assert.equal(crumbs['@id'], `${env.siteUrl}/about#breadcrumb`);
+assert.equal(crumbs['@id'], `${SITE.url}/about#breadcrumb`);
 assert.deepEqual(crumbs.itemListElement, [
-  { '@type': 'ListItem', position: 1, name: 'Home', item: env.siteUrl },
-  { '@type': 'ListItem', position: 2, name: 'About', item: `${env.siteUrl}/about` },
+  { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
+  { '@type': 'ListItem', position: 2, name: 'About', item: `${SITE.url}/about` },
 ]);
 assert.equal(breadcrumbJsonLd('/about', []), undefined, 'Home alone is not a breadcrumb');
 

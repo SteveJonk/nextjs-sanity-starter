@@ -70,14 +70,35 @@ export const NAVIGATION_QUERY = defineQuery(`
   }
 `);
 
+/**
+ * The site's own details — name, contact, language, social profiles.
+ *
+ * Every field is optional in the studio; `resolveSiteInformation` in
+ * `src/lib/site.ts` lays what comes back over the defaults, so an empty field
+ * falls back rather than rendering blank.
+ */
+export const SITE_INFORMATION_QUERY = defineQuery(`
+  *[_id == "siteInformation"][0]{
+    name,
+    description,
+    language,
+    phone,
+    email,
+    address,
+    addressCountry,
+    badges,
+    // Only the URLs: they become sameAs in the structured data.
+    "socialLinks": socialLinks[].url,
+    "logoUrl": logo.asset->url
+  }
+`);
+
 export const FOOTER_QUERY = defineQuery(`
   *[_id == "footer"][0]{
     linkGroups[]{
       title,
       links[]${linkExpansion}
     },
-    // Profile URLs only — they feed sameAs in the structured data.
-    "socialLinks": socialLinks[].url,
     copyright
   }
 `);

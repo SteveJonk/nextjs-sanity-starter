@@ -6,6 +6,7 @@ import { HOME_SLUG, pathForSlug } from '@/lib/links';
 import { client } from '@/sanity/client';
 import { pageBreadcrumbLabel, pageFaqs, pageJsonLd } from '@/lib/json-ld';
 import { pageMetadata, seoImageUrl } from '@/sanity/metadata';
+import { getSiteInformation } from '@/sanity/site-information';
 import { PAGE_QUERY } from '@/sanity/queries';
 
 const options = { next: { revalidate: 30 } };
@@ -36,7 +37,10 @@ export default async function SanityPage({ params }: PageProps) {
     permanentRedirect('/');
   }
 
-  const page = await client.fetch(PAGE_QUERY, { slug }, options);
+  const [page, site] = await Promise.all([
+    client.fetch(PAGE_QUERY, { slug }, options),
+    getSiteInformation(),
+  ]);
 
   if (!page) {
     notFound();
@@ -53,6 +57,7 @@ export default async function SanityPage({ params }: PageProps) {
           description: page.seo?.description,
           imageUrl: seoImageUrl(page.seo),
           faqs: pageFaqs(page.content),
+          language: site.language,
           // Matches the breadcrumb the pageHero block renders: Home > this page.
           trail: [
             { name: pageBreadcrumbLabel(page.content) ?? page.title, path },

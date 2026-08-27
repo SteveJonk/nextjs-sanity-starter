@@ -2,10 +2,12 @@ import { LogoMark } from '@/components/ui/LogoMark';
 import { Wrap } from '@/components/ui/Wrap';
 import { cn } from '@/lib/cn';
 import {
-  FOOTER_BADGES,
-  SITE,
+  mailtoHref,
+  resolveSiteInformation,
+  telHref,
   type FooterLinkGroup,
   type NavLink,
+  type SiteInformation,
 } from '@/lib/site';
 import Link from 'next/link';
 
@@ -27,11 +29,14 @@ function FooterLinkList({ links }: { links: NavLink[] }) {
 }
 
 type SiteFooterProps = {
+  /** From `getSiteInformation()`; the defaults stand in when not passed. */
+  site?: SiteInformation;
   linkGroups?: FooterLinkGroup[] | null;
   copyright?: string | null;
 };
 
 export function SiteFooter({
+  site = resolveSiteInformation(null),
   linkGroups = [],
   copyright,
 }: SiteFooterProps) {
@@ -48,9 +53,9 @@ export function SiteFooter({
           )}
         >
           <div>
-            <LogoMark variant='footer' />
+            <LogoMark name={site.name} variant='footer' />
             <p className='max-w-[270px] text-[0.9rem] leading-[1.75] text-subtle'>
-              {SITE.description}
+              {site.description}
             </p>
           </div>
           {groups.map((group) => (
@@ -67,24 +72,27 @@ export function SiteFooter({
             </h5>
             <ul className='list-none'>
               <li className='mb-[11px] text-[0.92rem] max-md:mb-0.5'>
-                {SITE.address[0]}
-                <br />
-                {SITE.address[1]}
+                {site.address.map((line, index) => (
+                  <span key={line}>
+                    {index > 0 ? <br /> : null}
+                    {line}
+                  </span>
+                ))}
               </li>
               <li className='mb-[11px] text-[0.92rem] max-md:mb-0.5'>
                 <Link
-                  href={SITE.phoneHref}
+                  href={telHref(site.phone)}
                   className='opacity-90 transition-opacity duration-200 hover:underline hover:opacity-100 hover:underline-offset-4 max-md:inline-block max-md:py-3'
                 >
-                  {SITE.phone}
+                  {site.phone}
                 </Link>
               </li>
               <li className='mb-[11px] text-[0.92rem] max-md:mb-0.5'>
                 <Link
-                  href={SITE.emailHref}
+                  href={mailtoHref(site.email)}
                   className='opacity-90 transition-opacity duration-200 hover:underline hover:opacity-100 hover:underline-offset-4 max-md:inline-block max-md:py-3'
                 >
-                  {SITE.email}
+                  {site.email}
                 </Link>
               </li>
             </ul>
@@ -97,11 +105,11 @@ export function SiteFooter({
           )}
         >
           <span>
-            {copyright || `© ${new Date().getFullYear()} ${SITE.name}`}
+            {copyright || `© ${new Date().getFullYear()} ${site.name}`}
           </span>
-          {FOOTER_BADGES.length > 0 ? (
+          {site.badges.length > 0 ? (
             <div className='flex gap-2.5 max-sm:flex-wrap'>
-              {FOOTER_BADGES.map((badge) => (
+              {site.badges.map((badge) => (
                 <span
                   key={badge}
                   className='rounded-pill border border-white/22 px-[13px] py-[5px] text-[0.65rem] tracking-[0.14em]'

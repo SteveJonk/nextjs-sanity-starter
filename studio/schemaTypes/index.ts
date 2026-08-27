@@ -16,6 +16,7 @@ import {linkType} from './objects/linkType'
 import {seoType} from './objects/seoType'
 import {pageBuilderType} from './pageBuilderType'
 import {pageType} from './pageType'
+import {siteInformationType} from './siteInformationType'
 
 /**
  * Every schema type the studio knows about.
@@ -31,6 +32,7 @@ export const schemaTypes = [
   faqType,
   navigationType,
   footerType,
+  siteInformationType,
   // Shared objects
   seoType,
   linkType,

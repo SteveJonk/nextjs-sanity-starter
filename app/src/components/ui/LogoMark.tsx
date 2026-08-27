@@ -1,7 +1,9 @@
 import { cn } from '@/lib/cn';
-import { SITE } from '@/lib/site';
+import { SITE_DEFAULTS } from '@/lib/site';
 
 type LogoMarkProps = {
+  /** From `siteInformation`; falls back to the default when not passed. */
+  name?: string;
   className?: string;
   /** Header mark responds to sticky/mobile; footer is a fixed 90px mark. */
   variant?: 'header' | 'footer';
@@ -12,13 +14,14 @@ type LogoMarkProps = {
 /**
  * The site logo.
  *
- * Ships as a plain wordmark built from `SITE.name` so there is nothing to
+ * Ships as a plain wordmark built from the site name so there is nothing to
  * replace before the first run. To use a real logo, swap the inner <span> for
  * an <Image> (or inline SVG) and keep the outer wrapper — the header and
  * footer size the mark through the `--mk` custom property set here, and the
  * `stuck` state animates it on scroll.
  */
 export function LogoMark({
+  name = SITE_DEFAULTS.name,
   className,
   variant = 'header',
   stuck = false,
@@ -45,7 +48,7 @@ export function LogoMark({
             'font-normal tracking-[0.005em] text-fg',
           )}
         >
-          {SITE.name}
+          {name}
         </b>
       </span>
     </span>

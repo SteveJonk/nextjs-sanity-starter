@@ -4,7 +4,7 @@
  * Menu items point at pages by reference, so run this after seeding the pages
  * — until a page exists the link falls back to a plain path.
  */
-import {SITE} from '../../src/lib/site'
+import {SITE_DEFAULTS} from '../../src/lib/site'
 import {client, key} from './shared'
 
 function navLinkExternal(label: string, href: string) {
@@ -74,7 +74,7 @@ async function upsertFooter() {
         ],
       },
     ],
-    copyright: `© ${new Date().getFullYear()} ${SITE.name}`,
+    copyright: `© ${new Date().getFullYear()} ${SITE_DEFAULTS.name}`,
   }
 
   await client.createOrReplace(doc)

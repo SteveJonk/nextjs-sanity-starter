@@ -17,13 +17,13 @@
  * any object left empty by that, so a half-filled document never emits
  * `"telephone": null`.
  */
-import { SITE } from '@/lib/site';
+import { SITE_DEFAULTS, SITE_URL, type SiteInformation } from '@/lib/site';
 
 export type JsonLdNode = Record<string, unknown>;
 
 /** References between nodes — not the document itself, just the key. */
-export const ORGANIZATION_ID = `${SITE.url}/#organization`;
-export const WEBSITE_ID = `${SITE.url}/#website`;
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+export const WEBSITE_ID = `${SITE_URL}/#website`;
 
 const ORGANIZATION_REF = { '@id': ORGANIZATION_ID };
 const WEBSITE_REF = { '@id': WEBSITE_ID };
@@ -32,7 +32,7 @@ const WEBSITE_REF = { '@id': WEBSITE_ID };
 export function absoluteUrl(path = '/'): string {
   if (/^https?:\/\//.test(path)) return path;
   const suffix = path === '/' || path === '' ? '' : `/${path.replace(/^\//, '')}`;
-  return `${SITE.url}${suffix}`;
+  return `${SITE_URL}${suffix}`;
 }
 
 /**
@@ -96,6 +96,7 @@ const POSTAL_CODE_LINE =
 
 export function postalAddress(
   lines: readonly (string | null | undefined)[] | null | undefined,
+  addressCountry: string = SITE_DEFAULTS.addressCountry,
 ): JsonLdNode | undefined {
   const parts = (lines ?? []).map((line) => line?.trim()).filter(Boolean) as string[];
   if (!parts.length) return undefined;
@@ -108,57 +109,47 @@ export function postalAddress(
     streetAddress: (match ? parts.slice(0, -1) : parts).join(', '),
     postalCode: match?.[1],
     addressLocality: match?.[2],
-    addressCountry: SITE.addressCountry,
+    addressCountry,
   });
 }
 
-export type OrganizationInput = {
-  /** From the CMS where there is a document for it; falls back to `site.ts`. */
-  name?: string | null;
-  description?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: readonly (string | null | undefined)[] | null;
-  logoUrl?: string | null;
-  /** Profile URLs elsewhere — the footer's social links. */
-  sameAs?: readonly (string | null | undefined)[] | null;
-};
-
 /**
- * The company behind the site. `Organization` is the safe generic type; swap
- * it for a more specific one (`LocalBusiness`, `Restaurant`, `RealEstateAgent`)
- * if the site is one — the sub-types carry opening hours, price range and the
- * rest.
+ * The company behind the site. `Organization` is the safe generic type; swap it
+ * for a more specific one (`LocalBusiness`, `Restaurant`, `RealEstateAgent`) if
+ * the site is one — the sub-types carry opening hours, price range and the rest.
+ *
+ * Everything comes from the resolved `siteInformation`, so the CMS is what
+ * search engines read; `site.ts` only supplies the defaults behind it.
  */
-export function organizationJsonLd(input: OrganizationInput = {}): JsonLdNode {
+export function organizationJsonLd(site: SiteInformation): JsonLdNode {
   return {
     '@type': 'Organization',
     '@id': ORGANIZATION_ID,
-    name: input.name ?? SITE.name,
-    url: SITE.url,
-    description: input.description ?? SITE.description,
-    telephone: input.phone ?? SITE.phone,
-    email: input.email ?? SITE.email,
-    address: postalAddress(input.address ?? SITE.address),
-    logo: input.logoUrl ? { '@type': 'ImageObject', url: input.logoUrl } : undefined,
-    sameAs: input.sameAs,
+    name: site.name,
+    url: SITE_URL,
+    description: site.description,
+    telephone: site.phone,
+    email: site.email,
+    address: postalAddress(site.address, site.addressCountry),
+    logo: site.logoUrl ? { '@type': 'ImageObject', url: site.logoUrl } : undefined,
+    sameAs: site.socialLinks,
   };
 }
 
-export function websiteJsonLd(): JsonLdNode {
+export function websiteJsonLd(site: SiteInformation): JsonLdNode {
   return {
     '@type': 'WebSite',
     '@id': WEBSITE_ID,
-    url: SITE.url,
-    name: SITE.name,
-    inLanguage: SITE.language,
+    url: SITE_URL,
+    name: site.name,
+    inLanguage: site.language,
     publisher: ORGANIZATION_REF,
   };
 }
 
 /** The two nodes that appear on every page. */
-export function siteJsonLd(input: OrganizationInput = {}): JsonLdNode | null {
-  return jsonLdGraph([organizationJsonLd(input), websiteJsonLd()]);
+export function siteJsonLd(site: SiteInformation): JsonLdNode | null {
+  return jsonLdGraph([organizationJsonLd(site), websiteJsonLd(site)]);
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +228,8 @@ export type PageInput = {
   imageUrl?: string | null;
   faqs?: readonly FaqInput[] | null;
   trail?: Crumb[];
+  /** BCP 47 tag from `siteInformation`; defaults to the one in `site.ts`. */
+  language?: string;
   /** For pages that are something more specific than a `WebPage`. */
   type?: string | string[];
   extra?: JsonLdNode;
@@ -260,7 +253,7 @@ export function webPageJsonLd(input: PageInput): JsonLdNode {
     url,
     name: input.title,
     description: input.description,
-    inLanguage: SITE.language,
+    inLanguage: input.language ?? SITE_DEFAULTS.language,
     isPartOf: WEBSITE_REF,
     // Deliberately NO `about` pointing at the organisation. The company already
     // hangs off the page via `isPartOf` -> WebSite -> `publisher`, and a second

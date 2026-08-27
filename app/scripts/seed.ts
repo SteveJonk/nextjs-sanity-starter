@@ -4,6 +4,7 @@
  * Usage (from app/):
  *   npm run seed                 # everything
  *   npm run seed:home            # one page
+ *   npm run seed:site            # the site information singleton
  *   npm run seed -- home nav
  *
  * Each target is idempotent and only touches its own documents, so seeding one
@@ -16,9 +17,11 @@
 import {seedAbout} from './seed/about'
 import {seedHome} from './seed/home'
 import {seedNavigation} from './seed/navigation'
+import {seedSiteInformation} from './seed/site-information'
 import {projectRef} from './seed/shared'
 
 const TARGETS = {
+  site: seedSiteInformation,
   home: seedHome,
   about: seedAbout,
   // `nav` runs last by default: it links menu items to pages by slug, so the

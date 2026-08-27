@@ -5,7 +5,7 @@
  * ignoring it for weeks. Five things carry the weight here:
  *   1. `prune` drops empty fields but keeps the `@id` references intact —
  *      without those references the graph falls apart;
- *   2. the organisation falls back to `site.ts` and takes CMS values over it;
+ *   2. the organisation takes CMS values and falls back to `site.ts` per field;
  *   3. a page with questions is ALSO an FAQPage, with exactly those questions;
  *   4. a page node has one path to the organisation, never two;
  *   5. the breadcrumb starts at Home and matches the visible one.
@@ -31,7 +31,7 @@ import {
   websiteJsonLd,
   type JsonLdNode,
 } from '@/lib/json-ld';
-import { SITE } from '@/lib/site';
+import { SITE_DEFAULTS, SITE_URL, resolveSiteInformation } from '@/lib/site';
 
 /** The node with this `@type` from a graph — `@type` may also be a list. */
 function node(graph: JsonLdNode | null, type: string): JsonLdNode {
@@ -61,10 +61,10 @@ assert.equal(prune(0), 0, 'a zero is a value, not emptiness');
 assert.equal(prune(false), false);
 assert.equal(jsonLdGraph([null, undefined]), null, 'an empty graph is nothing');
 
-assert.equal(absoluteUrl('/'), SITE.url);
-assert.equal(absoluteUrl(''), SITE.url);
-assert.equal(absoluteUrl('about'), `${SITE.url}/about`);
-assert.equal(absoluteUrl('/about'), `${SITE.url}/about`);
+assert.equal(absoluteUrl('/'), SITE_URL);
+assert.equal(absoluteUrl(''), SITE_URL);
+assert.equal(absoluteUrl('about'), `${SITE_URL}/about`);
+assert.equal(absoluteUrl('/about'), `${SITE_URL}/about`);
 assert.equal(absoluteUrl('https://elsewhere.example/x'), 'https://elsewhere.example/x');
 
 // 2. Organisation: address parsing, site.ts fallback, CMS values win.
@@ -73,46 +73,71 @@ assert.deepEqual(postalAddress(['Prinsengracht 263', '1016 GV Amsterdam']), {
   streetAddress: 'Prinsengracht 263',
   postalCode: '1016 GV',
   addressLocality: 'Amsterdam',
-  addressCountry: SITE.addressCountry,
+  addressCountry: SITE_DEFAULTS.addressCountry,
 });
 assert.deepEqual(postalAddress(['Chausseestrasse 1', '10115 Berlin']), {
   '@type': 'PostalAddress',
   streetAddress: 'Chausseestrasse 1',
   postalCode: '10115',
   addressLocality: 'Berlin',
-  addressCountry: SITE.addressCountry,
+  addressCountry: SITE_DEFAULTS.addressCountry,
 });
 // Without a recognisable postcode line everything stays street — better than guessing.
 assert.deepEqual(postalAddress(['Somewhere 1']), {
   '@type': 'PostalAddress',
   streetAddress: 'Somewhere 1',
-  addressCountry: SITE.addressCountry,
+  addressCountry: SITE_DEFAULTS.addressCountry,
 });
 assert.equal(postalAddress([]), undefined);
 assert.equal(postalAddress(null), undefined);
 
-const fallback = organizationJsonLd();
+const defaults = resolveSiteInformation(null);
+const fallback = organizationJsonLd(defaults);
 assert.equal(fallback['@id'], ORGANIZATION_ID);
-assert.equal(fallback.name, SITE.name);
-assert.equal(fallback.telephone, SITE.phone);
-assert.equal(fallback.sameAs, undefined, 'no social links, no sameAs');
+assert.equal(fallback.name, SITE_DEFAULTS.name);
+assert.equal(fallback.telephone, SITE_DEFAULTS.phone);
+assert.equal(prune(fallback)!.sameAs, undefined, 'no social links, no sameAs');
 
-const fromCms = prune(
-  organizationJsonLd({
-    name: 'Other Co',
-    phone: '+31 (0)20 000 0000',
-    sameAs: ['https://example.com/profile', null, ''],
-  }),
-) as JsonLdNode;
+// The CMS wins field by field; anything an editor left blank falls back, and an
+// unreachable CMS (null) is the same as every field being blank.
+const merged = resolveSiteInformation({
+  name: 'Other Co',
+  phone: '  +31 (0)20 000 0000  ',
+  description: '   ',
+  address: ['Chausseestrasse 1', '10115 Berlin', null],
+  socialLinks: ['https://example.com/profile', null, ''],
+  language: 'de',
+});
+assert.equal(merged.name, 'Other Co');
+assert.equal(merged.phone, '+31 (0)20 000 0000', 'values are trimmed');
+assert.equal(merged.description, SITE_DEFAULTS.description, 'a blank field falls back');
+assert.equal(merged.email, SITE_DEFAULTS.email, 'a missing field falls back');
+assert.deepEqual(merged.address, ['Chausseestrasse 1', '10115 Berlin']);
+assert.deepEqual(merged.socialLinks, ['https://example.com/profile']);
+assert.deepEqual(
+  resolveSiteInformation({ address: [], badges: [null, ''] }).address,
+  [...SITE_DEFAULTS.address],
+  'an emptied list falls back too',
+);
+assert.deepEqual(resolveSiteInformation(null).socialLinks, [], 'sameAs has nothing to fall back to');
+
+const fromCms = prune(organizationJsonLd(merged)) as JsonLdNode;
 assert.equal(fromCms.name, 'Other Co');
 assert.equal(fromCms.telephone, '+31 (0)20 000 0000');
-assert.deepEqual(fromCms.sameAs, ['https://example.com/profile'], 'empty entries are dropped');
-assert.equal(fromCms.email, SITE.email, 'what the CMS leaves out falls back to site.ts');
+assert.deepEqual(fromCms.sameAs, ['https://example.com/profile']);
+assert.deepEqual(fromCms.address, {
+  '@type': 'PostalAddress',
+  streetAddress: 'Chausseestrasse 1',
+  postalCode: '10115',
+  addressLocality: 'Berlin',
+  addressCountry: SITE_DEFAULTS.addressCountry,
+});
 
-assert.deepEqual(websiteJsonLd().publisher, { '@id': ORGANIZATION_ID });
-assert.equal(websiteJsonLd().inLanguage, SITE.language);
+assert.deepEqual(websiteJsonLd(defaults).publisher, { '@id': ORGANIZATION_ID });
+assert.equal(websiteJsonLd(defaults).inLanguage, SITE_DEFAULTS.language);
+assert.equal(websiteJsonLd(merged).inLanguage, 'de', 'the language follows the CMS');
 
-const site = siteJsonLd();
+const site = siteJsonLd(defaults);
 assert.equal(node(site, 'Organization')['@id'], ORGANIZATION_ID);
 assert.equal(node(site, 'WebSite')['@id'], WEBSITE_ID);
 
@@ -147,13 +172,19 @@ const about = pageJsonLd({
   path: '/about',
   title: 'About',
   description: 'Who we are.',
+  language: defaults.language,
   faqs: pageFaqs(content),
   trail: [{ name: pageBreadcrumbLabel(content)!, path: '/about' }],
 });
 const aboutPage = node(about, 'WebPage');
 assert.deepEqual(aboutPage['@type'], ['WebPage', 'FAQPage']);
-assert.equal(aboutPage['@id'], `${SITE.url}/about#page`);
-assert.equal(aboutPage.inLanguage, SITE.language);
+assert.equal(aboutPage['@id'], `${SITE_URL}/about#page`);
+assert.equal(aboutPage.inLanguage, SITE_DEFAULTS.language);
+assert.equal(
+  (pageJsonLd({ path: '/x', language: 'de' })?.['@graph'] as JsonLdNode[])[0].inLanguage,
+  'de',
+  'a page node follows the CMS language too',
+);
 assert.deepEqual(aboutPage.isPartOf, { '@id': WEBSITE_ID });
 assert.equal((aboutPage.mainEntity as unknown[]).length, 2);
 assert.deepEqual((aboutPage.mainEntity as JsonLdNode[])[0], {
@@ -180,12 +211,12 @@ assert.equal(
 );
 
 // 5. The breadcrumb starts at Home and matches the visible one.
-assert.deepEqual(aboutPage.breadcrumb, { '@id': `${SITE.url}/about#breadcrumb` });
+assert.deepEqual(aboutPage.breadcrumb, { '@id': `${SITE_URL}/about#breadcrumb` });
 const crumbs = node(about, 'BreadcrumbList');
-assert.equal(crumbs['@id'], `${SITE.url}/about#breadcrumb`);
+assert.equal(crumbs['@id'], `${SITE_URL}/about#breadcrumb`);
 assert.deepEqual(crumbs.itemListElement, [
-  { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url },
-  { '@type': 'ListItem', position: 2, name: 'About', item: `${SITE.url}/about` },
+  { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+  { '@type': 'ListItem', position: 2, name: 'About', item: `${SITE_URL}/about` },
 ]);
 assert.equal(breadcrumbJsonLd('/about', []), undefined, 'Home alone is not a breadcrumb');
 

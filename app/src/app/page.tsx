@@ -6,6 +6,7 @@ import { HOME_SLUG } from '@/lib/links';
 import { client } from '@/sanity/client';
 import { pageFaqs, pageJsonLd } from '@/lib/json-ld';
 import { pageMetadata, seoImageUrl } from '@/sanity/metadata';
+import { getSiteInformation } from '@/sanity/site-information';
 import { PAGE_QUERY } from '@/sanity/queries';
 
 const options = { next: { revalidate: 30 } };
@@ -17,7 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const page = await client.fetch(PAGE_QUERY, { slug: HOME_SLUG }, options);
+  const [page, site] = await Promise.all([
+    client.fetch(PAGE_QUERY, { slug: HOME_SLUG }, options),
+    getSiteInformation(),
+  ]);
 
   if (!page) {
     notFound();
@@ -32,6 +36,7 @@ export default async function HomePage() {
           description: page.seo?.description,
           imageUrl: seoImageUrl(page.seo),
           faqs: pageFaqs(page.content),
+          language: site.language,
         })}
       />
       <main>

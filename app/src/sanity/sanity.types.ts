@@ -293,6 +293,51 @@ export type Seo = {
   noIndex?: boolean;
 };
 
+export type SiteInformation = {
+  _id: string;
+  _type: "siteInformation";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  name: string;
+  description?: string;
+  logo?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  language?: string;
+  phone?: string;
+  email?: string;
+  address?: Array<string>;
+  addressCountry?: string;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
+    _type: "socialLink";
+    _key: string;
+  }>;
+  badges?: Array<string>;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+};
+
 export type Footer = {
   _id: string;
   _type: "footer";
@@ -310,12 +355,6 @@ export type Footer = {
       _key: string;
     }>;
     _type: "linkGroup";
-    _key: string;
-  }>;
-  socialLinks?: Array<{
-    platform: string;
-    url: string;
-    _type: "socialLink";
     _key: string;
   }>;
   copyright?: string;
@@ -367,22 +406,6 @@ export type Page = {
   slug: Slug;
   seo?: Seo;
   content?: PageBuilder;
-};
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x: number;
-  y: number;
-  height: number;
-  width: number;
 };
 
 export type Slug = {
@@ -509,12 +532,13 @@ export type AllSanitySchemaTypes =
   | Cta
   | Link
   | Seo
+  | SiteInformation
+  | SanityImageCrop
+  | SanityImageHotspot
   | Footer
   | Navigation
   | Faq
   | Page
-  | SanityImageCrop
-  | SanityImageHotspot
   | Slug
   | SanityImagePaletteSwatch
   | SanityImagePalette
@@ -927,12 +951,53 @@ export type NAVIGATION_QUERY_RESULT =
   | null;
 
 // Source: ../app/src/sanity/queries.ts
+// Variable: SITE_INFORMATION_QUERY
+// Query: *[_id == "siteInformation"][0]{    name,    description,    language,    phone,    email,    address,    addressCountry,    badges,    // Only the URLs: they become sameAs in the structured data.    "socialLinks": socialLinks[].url,    "logoUrl": logo.asset->url  }
+export type SITE_INFORMATION_QUERY_RESULT =
+  | {
+      name: null;
+      description: null;
+      language: null;
+      phone: null;
+      email: null;
+      address: null;
+      addressCountry: null;
+      badges: null;
+      socialLinks: null;
+      logoUrl: null;
+    }
+  | {
+      name: null;
+      description: string | null;
+      language: null;
+      phone: null;
+      email: null;
+      address: null;
+      addressCountry: null;
+      badges: null;
+      socialLinks: null;
+      logoUrl: null;
+    }
+  | {
+      name: string;
+      description: string | null;
+      language: string | null;
+      phone: string | null;
+      email: string | null;
+      address: Array<string> | null;
+      addressCountry: string | null;
+      badges: Array<string> | null;
+      socialLinks: Array<string> | null;
+      logoUrl: string | null;
+    }
+  | null;
+
+// Source: ../app/src/sanity/queries.ts
 // Variable: FOOTER_QUERY
-// Query: *[_id == "footer"][0]{    linkGroups[]{      title,      links[]{  ...,  internalLink->{    "slug": slug.current  }}    },    // Profile URLs only — they feed sameAs in the structured data.    "socialLinks": socialLinks[].url,    copyright  }
+// Query: *[_id == "footer"][0]{    linkGroups[]{      title,      links[]{  ...,  internalLink->{    "slug": slug.current  }}    },    copyright  }
 export type FOOTER_QUERY_RESULT =
   | {
       linkGroups: null;
-      socialLinks: null;
       copyright: null;
     }
   | {
@@ -949,7 +1014,6 @@ export type FOOTER_QUERY_RESULT =
           _key: string;
         }> | null;
       }> | null;
-      socialLinks: Array<string> | null;
       copyright: string | null;
     }
   | null;
@@ -961,6 +1025,7 @@ declare module "@sanity/client" {
     '\n  *[_type == "page" && slug.current == $slug][0]{\n    _id,\n    title,\n    slug,\n    seo,\n    content[]{\n      ...,\n      primaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      secondaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      highlight{\n        ...,\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      items[]{\n        ...,\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      _type == "faqs" => {\n        ...,\n        faqs[]->{\n          ...,\n          link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      }\n    }\n  }\n': PAGE_QUERY_RESULT;
     '\n  *[_type == "page" && defined(slug.current)]{\n    "slug": slug.current,\n    _updatedAt\n  }\n': PAGE_SLUGS_QUERY_RESULT;
     '\n  *[_id == "navigation"][0]{\n    navLeft[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n    navRight[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n  }\n': NAVIGATION_QUERY_RESULT;
-    '\n  *[_id == "footer"][0]{\n    linkGroups[]{\n      title,\n      links[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n    },\n    // Profile URLs only \u2014 they feed sameAs in the structured data.\n    "socialLinks": socialLinks[].url,\n    copyright\n  }\n': FOOTER_QUERY_RESULT;
+    '\n  *[_id == "siteInformation"][0]{\n    name,\n    description,\n    language,\n    phone,\n    email,\n    address,\n    addressCountry,\n    badges,\n    // Only the URLs: they become sameAs in the structured data.\n    "socialLinks": socialLinks[].url,\n    "logoUrl": logo.asset->url\n  }\n': SITE_INFORMATION_QUERY_RESULT;
+    '\n  *[_id == "footer"][0]{\n    linkGroups[]{\n      title,\n      links[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n    },\n    copyright\n  }\n': FOOTER_QUERY_RESULT;
   }
 }

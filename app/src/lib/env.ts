@@ -2,7 +2,7 @@
  * Sanity connection details and analytics ids, read from the environment.
  *
  * The site's own origin is NOT here: it has a working default, so it does not
- * need the fail-fast below and lives in `site.ts` as `SITE.url`.
+ * need the fail-fast below and lives in `site.ts` as `SITE_URL`.
  *
  * Copy `.env.example` to `.env` and fill in the project id before running
  * `npm run dev`. The id is not a secret — it ships in the client bundle — so

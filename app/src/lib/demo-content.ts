@@ -14,7 +14,7 @@
  * is generic on purpose, so nothing breaks when you swap in your own.
  */
 
-import { SITE } from '@/lib/site';
+import { SITE_DEFAULTS, telHref } from '@/lib/site';
 
 const WIDE = '/images/placeholder-wide.png';
 const PORTRAIT = '/images/placeholder-portrait.png';
@@ -287,5 +287,5 @@ export const CTA_BAND = {
   title: 'Tell us what you are building',
   body: 'An hour on a call, no charge and no pitch deck. Worst case you leave with a clearer scope and a name of someone better suited.',
   primaryCta: { label: 'Book a conversation', href: '#' },
-  secondaryCta: { label: SITE.phone, href: SITE.phoneHref },
+  secondaryCta: { label: SITE_DEFAULTS.phone, href: telHref(SITE_DEFAULTS.phone) },
 };

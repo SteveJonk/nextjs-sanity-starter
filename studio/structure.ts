@@ -1,4 +1,5 @@
 import {BlockElementIcon} from '@sanity/icons/BlockElement'
+import {CogIcon} from '@sanity/icons/Cog'
 import {MenuIcon} from '@sanity/icons/Menu'
 import type {StructureResolver} from 'sanity/structure'
 
@@ -7,12 +8,22 @@ import type {StructureResolver} from 'sanity/structure'
  * menu entry, and are filtered out of the generic document list below so they
  * cannot be created twice.
  */
-const SINGLETONS = ['navigation', 'footer']
+const SINGLETONS = ['siteInformation', 'navigation', 'footer']
 
 export const structure: StructureResolver = (S) =>
   S.list()
     .title('Content')
     .items([
+      S.listItem()
+        .title('Site information')
+        .id('siteInformation')
+        .icon(CogIcon)
+        .child(
+          S.document()
+            .schemaType('siteInformation')
+            .documentId('siteInformation')
+            .title('Site information'),
+        ),
       S.listItem()
         .title('Navigation')
         .id('navigation')

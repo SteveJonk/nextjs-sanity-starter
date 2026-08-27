@@ -11,6 +11,7 @@
     "typegen": "npm --prefix ../studio run typegen",
     "check:jsonld": "tsx scripts/check-jsonld.ts",
     "seed": "tsx --env-file=.env scripts/seed.ts",
+    "seed:site": "tsx --env-file=.env scripts/seed.ts site",
     "seed:home": "tsx --env-file=.env scripts/seed.ts home",
     "seed:about": "tsx --env-file=.env scripts/seed.ts about",
     "seed:nav": "tsx --env-file=.env scripts/seed.ts nav"

@@ -17,6 +17,8 @@ studio and it is live.
 - **Generated sitemap and robots.txt** — driven by the CMS, nothing to maintain
 - **Structured data** — one schema.org graph per page, checked by a script
 - **Analytics** — GTM and the Meta pixel, both off until you set an id
+- **Everything in the CMS** — pages, menus and the site's own details, with
+  code-level defaults behind every field
 - **Seeding** — one command fills a fresh Sanity project with working content
 
 ## Setup
@@ -39,7 +41,7 @@ npm run dev                   # http://localhost:3333
 cd ../app
 cp .env.example .env          # same project id, plus a write token for seeding
 npm install
-npm run seed                  # creates the home + about pages and the menus
+npm run seed                  # site details, the home + about pages, the menus
 npm run dev                   # http://localhost:3000
 ```
 
@@ -86,8 +88,26 @@ care.
 
 ### Site details
 
-`app/src/lib/site.ts` — company name, phone, email, address, footer badges.
-Used by the header, footer and CTA blocks.
+Company name, description, phone, email, address, language and footer badges
+live in the CMS, as the **Site information** singleton at the top of the
+studio's menu. They drive the header, the footer, the page title template and
+the structured data.
+
+`app/src/lib/site.ts` holds the defaults for all of it, and does the same two
+jobs `demo-content.ts` does for blocks: it is what the front end falls back to
+when a field is empty **or the CMS is unreachable**, *and* it is what
+`npm run seed:site` pushes into Sanity. Replace the constants once and both
+sides move together.
+
+Read the resolved values with `getSiteInformation()`
+(`app/src/sanity/site-information.ts`) — never `SITE_DEFAULTS` directly in a
+component, or an editor's change will not show up there. It is wrapped in
+React's `cache`, so the layout, the metadata and the page routes share one
+request.
+
+One detail stays in code: **`SITE_URL`**, from `NEXT_PUBLIC_SITE_URL`. It
+differs per deploy, and `metadataBase`, `robots.txt` and the structured data all
+need it before — or without — a CMS round trip.
 
 ### Copy
 
@@ -195,8 +215,9 @@ Every page carries a schema.org JSON-LD graph, built in
 It is **one graph per page**, with `@id`s pointing at each other, rather than
 separate blocks repeating the same facts:
 
-- `#organization` and `#website` are on every page — the layout renders them,
-  from `src/lib/site.ts` plus the footer document's social links (`sameAs`)
+- `#organization` and `#website` are on every page — the layout renders them
+  from the **Site information** singleton, including its social links
+  (`sameAs`), with `src/lib/site.ts` as the fallback behind every field
 - each page adds a `WebPage` with its title, description and OG image
 - a page with an `faqs` block is *also* an `FAQPage`, on the same node — two
   nodes for one URL would claim two pages that do not exist
@@ -279,17 +300,18 @@ app/
     TrackingScripts   GTM + Meta pixel, both opt-in
     JsonLd            renders one structured-data graph
   src/hooks/          scroll, sticky header, mobile nav
-  src/lib/            site constants, demo copy, link resolution, env,
+  src/lib/            site defaults, demo copy, link resolution, env,
                       json-ld (schema.org graph builders)
   src/sanity/         client, queries, image helpers, metadata mapping,
-                      generated schema.json + sanity.types.ts
-  scripts/seed/       one file per seeded page
+                      site-information fetch, generated types
+  scripts/seed/       one file per seeded page + the site singleton
   scripts/check-jsonld.ts   assertions over the structured data
 studio/
   schemaTypes/
     blocks/           one file per block
     objects/          shared field groups (seo, link, cta)
   structure.ts        studio menu and singletons
+                      (site information, navigation, footer)
 ```
 
 ## Commands
@@ -299,7 +321,8 @@ studio/
 npm run dev          npm run build        npm run start
 npm run lint         npm run typecheck    npm run typegen
 npm run check:jsonld
-npm run seed         npm run seed:home    npm run seed:about   npm run seed:nav
+npm run seed         npm run seed:site    npm run seed:home
+npm run seed:about   npm run seed:nav
 
 # studio/
 npm run dev          npm run build        npm run deploy

@@ -17,6 +17,9 @@ npm run dev            # http://localhost:3333
 - `schemaTypes/objects/` — shared field groups (`seo`, `link`, `cta`)
 - `schemaTypes/pageBuilderType.ts` — which blocks editors can insert
 - `structure.ts` — the studio's left-hand menu, including the singletons
+- `schemaTypes/siteInformationType.ts` — the site's own details (name, contact,
+  language, social links); the app falls back to `app/src/lib/site.ts` per field
+  and `npm run seed:site` fills it from there
 - `sanity.cli.ts` — CLI config, including the `typegen` paths that point at the
   app
 

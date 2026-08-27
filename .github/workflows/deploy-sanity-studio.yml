@@ -1,0 +1,75 @@
+name: Deploy Sanity Studio
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "studio/**"
+      # The workflow itself, so a change to it is exercised straight away.
+      - ".github/workflows/deploy-sanity-studio.yml"
+  workflow_dispatch:
+
+# One deploy at a time; a new push cancels a run in progress.
+concurrency:
+  group: deploy-sanity-studio
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: studio
+
+    # Vite bakes `process.env.SANITY_STUDIO_*` into the bundle at build time, so
+    # these belong here and not just on the deploy step. At job level so both
+    # `sanity build` and the rebuild inside `sanity deploy` see them. Locally
+    # they come from studio/.env, which is gitignored.
+    #
+    # Set them under Settings > Secrets and variables > Actions > Variables.
+    # None of them is a secret: the project id ships in the studio bundle.
+    # DATASET and TITLE may be left unset — the studio config defaults them to
+    # "production" and "Studio".
+    env:
+      SANITY_STUDIO_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
+      SANITY_STUDIO_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
+      SANITY_STUDIO_TITLE: ${{ vars.SANITY_STUDIO_TITLE }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The studio config throws without a project id, but that surfaces part
+      # way through a build. Failing here says which setting is missing and
+      # where to put it.
+      - name: Check studio env vars
+        run: |
+          if [ -z "$SANITY_STUDIO_PROJECT_ID" ]; then
+            echo "::error::SANITY_STUDIO_PROJECT_ID is empty. Set it under Settings > Secrets and variables > Actions > Variables."
+            exit 1
+          fi
+
+      - name: Build studio
+        run: npm run build
+
+      # --yes: unattended, or the CLI asks for a studio hostname and the run
+      # hangs until it times out.
+      # --url: which studio to deploy to, from the SANITY_STUDIO_HOSTNAME
+      # repository variable. Leave it unset and the CLI reuses the studio that
+      # is already deployed for this project.
+      - name: Deploy to Sanity
+        run: npm run deploy -- --yes ${STUDIO_HOSTNAME:+--url "$STUDIO_HOSTNAME"}
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+          STUDIO_HOSTNAME: ${{ vars.SANITY_STUDIO_HOSTNAME }}

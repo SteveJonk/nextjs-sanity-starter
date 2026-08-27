@@ -1,5 +1,6 @@
 import { Benefits } from '@/components/blocks/Benefits';
 import { CrossLinks } from '@/components/blocks/CrossLinks';
+import { ContactForm, type ContactFormAside } from '@/components/blocks/ContactForm';
 import { CtaBand } from '@/components/blocks/CtaBand';
 import { Faq } from '@/components/blocks/Faq';
 import { Hero } from '@/components/blocks/Hero';
@@ -8,6 +9,8 @@ import { MediaText } from '@/components/blocks/MediaText';
 import { PageHero } from '@/components/blocks/PageHero';
 import { Services } from '@/components/blocks/Services';
 import { Steps } from '@/components/blocks/Steps';
+import type { ContactIconName } from '@/components/ui/ContactIcon';
+import { toFormDefinition } from '@/lib/form-fields';
 import { imageSrc, toImage, type SanityImage } from '@/sanity/image';
 import { resolveHref, type SanityLabeledLink, type SanityLink } from '@/lib/links';
 import type { Benefit } from '@/lib/demo-content';
@@ -39,7 +42,7 @@ function toCta(cta: SanityCta | undefined | null) {
  * each case casts what it reads. Unknown types warn and render nothing rather
  * than throwing — a page keeps working while a new block is half-built.
  */
-function renderBlock(block: PageBlock) {
+function renderBlock(block: PageBlock, path?: string) {
   switch (block._type) {
     case 'hero': {
       const slides = (block.slides as SanityImage[] | undefined)
@@ -248,14 +251,69 @@ function renderBlock(block: PageBlock) {
         />
       );
     }
+    case 'contactForm': {
+      const aside = block.aside as
+        | {
+            title?: string;
+            body?: string;
+            items?: Array<{ icon: ContactIconName; title: string; subtitle?: string }>;
+            cta?: SanityCta;
+          }
+        | undefined;
+      // Only the site key travels to the browser; the secret is read by the
+      // submit route, which never sends it anywhere.
+      const recaptcha = block.recaptcha as
+        | { recaptchaEnabled?: boolean; recaptchaSiteKey?: string }
+        | undefined;
+
+      return (
+        <ContactForm
+          key={block._key}
+          eyebrow={block.eyebrow as string | undefined}
+          title={block.title as string | undefined}
+          lead={block.lead as string | undefined}
+          note={block.note as string | undefined}
+          form={toFormDefinition(block.form)}
+          // What a hidden `{{path}}` field is filled with, so the mail says
+          // which page the form was sent from.
+          context={path ? { path } : undefined}
+          aside={
+            aside?.title
+              ? ({
+                  title: aside.title,
+                  body: aside.body ?? '',
+                  items: (aside.items ?? []).map((item) => ({
+                    icon: item.icon,
+                    title: item.title,
+                    subtitle: item.subtitle ?? '',
+                  })),
+                  cta: toCta(aside.cta),
+                } satisfies ContactFormAside)
+              : undefined
+          }
+          recaptcha={
+            recaptcha?.recaptchaEnabled && recaptcha.recaptchaSiteKey
+              ? { enabled: true, siteKey: recaptcha.recaptchaSiteKey }
+              : undefined
+          }
+        />
+      );
+    }
     default:
       console.warn(`Unknown page builder block type: ${block._type}`);
       return null;
   }
 }
 
-export function PageBuilder({ content }: { content?: PageBlock[] | null }) {
+export function PageBuilder({
+  content,
+  path,
+}: {
+  content?: PageBlock[] | null;
+  /** The page's own path, for blocks that record where they were used. */
+  path?: string;
+}) {
   if (!Array.isArray(content) || content.length === 0) return null;
 
-  return <>{content.map((block) => renderBlock(block))}</>;
+  return <>{content.map((block) => renderBlock(block, path))}</>;
 }

@@ -16,6 +16,34 @@ npm run dev            # http://localhost:3333
 - `schemaTypes/blocks/` — one file per page-builder block
 - `schemaTypes/objects/` — shared field groups (`seo`, `link`, `cta`)
 - `schemaTypes/pageBuilderType.ts` — which blocks editors can insert
+- `schemaTypes/formType.ts` + `objects/formFieldType.ts` — forms and their
+  fields; `formGeneralSettingsType.ts` holds the shared mail and spam settings
 - `structure.ts` — the studio's left-hand menu, including the singletons
+- `schemaTypes/siteInformationType.ts` — the site's own details (name, contact,
+  language, social links); the app falls back to `app/src/lib/site.ts` per field
+  and `npm run seed:site` fills it from there
+- `sanity.cli.ts` — CLI config, including the `typegen` paths that point at the
+  app
+
+## Types
+
+```bash
+npm run typegen        # schema extract + sanity typegen generate
+```
+
+Writes `../app/src/sanity/schema.json` and `../app/src/sanity/sanity.types.ts`.
+Typegen runs from here because the CLI needs a studio project root, but the
+GROQ it reads and the types it writes belong to the app. Run it after changing
+a schema type; the root `README.md` has the full story.
+
+## Deploying
+
+```bash
+npm run deploy         # deploys to <hostname>.sanity.studio
+```
+
+Pushes to `main` that touch `studio/` deploy automatically through
+`.github/workflows/deploy-sanity-studio.yml`. The root `README.md` lists the
+repository secret and variables it needs.
 
 See the root `README.md` for how a block travels from here to the front end.

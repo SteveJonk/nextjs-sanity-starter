@@ -28,10 +28,8 @@
 # Dotenv and similar local-only files
 *.local
 
-# Dotenv
+# Dotenv — only the real one; `.env.example` is committed
 .env
-.env.*
-!.env.example
 
 # TypeScript incremental build info
 *.tsbuildinfo

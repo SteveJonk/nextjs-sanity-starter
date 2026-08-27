@@ -4,6 +4,8 @@
  * Usage (from app/):
  *   npm run seed                 # everything
  *   npm run seed:home            # one page
+ *   npm run seed:site            # the site information singleton
+ *   npm run seed:forms           # form settings + the demo contact form
  *   npm run seed -- home nav
  *
  * Each target is idempotent and only touches its own documents, so seeding one
@@ -14,13 +16,20 @@
  * function, then register it in TARGETS below and add an npm script.
  */
 import {seedAbout} from './seed/about'
+import {seedContact} from './seed/contact'
+import {seedForms} from './seed/forms'
 import {seedHome} from './seed/home'
 import {seedNavigation} from './seed/navigation'
+import {seedSiteInformation} from './seed/site-information'
 import {projectRef} from './seed/shared'
 
 const TARGETS = {
+  site: seedSiteInformation,
+  // Before the pages: the contact page references the form by id.
+  forms: seedForms,
   home: seedHome,
   about: seedAbout,
+  contact: seedContact,
   // `nav` runs last by default: it links menu items to pages by slug, so the
   // pages need to exist first.
   nav: seedNavigation,

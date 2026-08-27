@@ -4,7 +4,7 @@
  * Menu items point at pages by reference, so run this after seeding the pages
  * — until a page exists the link falls back to a plain path.
  */
-import {SITE} from '../../src/lib/site'
+import {SITE_DEFAULTS} from '../../src/lib/site'
 import {client, key} from './shared'
 
 function navLinkExternal(label: string, href: string) {
@@ -40,13 +40,14 @@ async function pageLink(label: string, slug: string) {
 
 async function upsertNavigation() {
   const aboutLink = await pageLink('About', 'about')
+  const contactLink = await pageLink('Contact', 'contact')
 
   // The header splits its menu either side of the logo.
   const doc = {
     _id: 'navigation',
     _type: 'navigation' as const,
     navLeft: [aboutLink, navLinkExternal('Services', '#')],
-    navRight: [navLinkExternal('Work', '#'), navLinkExternal('Contact', '#')],
+    navRight: [navLinkExternal('Work', '#'), contactLink],
   }
 
   await client.createOrReplace(doc)
@@ -55,6 +56,7 @@ async function upsertNavigation() {
 
 async function upsertFooter() {
   const aboutLink = await pageLink('About', 'about')
+  const contactLink = await pageLink('Contact', 'contact')
 
   const doc = {
     _id: 'footer',
@@ -68,13 +70,10 @@ async function upsertFooter() {
       {
         _key: key('footer-more'),
         title: 'More',
-        links: [
-          navLinkExternal('Services', '#'),
-          navLinkExternal('Contact', '#'),
-        ],
+        links: [navLinkExternal('Services', '#'), contactLink],
       },
     ],
-    copyright: `© ${new Date().getFullYear()} ${SITE.name}`,
+    copyright: `© ${new Date().getFullYear()} ${SITE_DEFAULTS.name}`,
   }
 
   await client.createOrReplace(doc)

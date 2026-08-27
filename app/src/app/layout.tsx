@@ -10,12 +10,16 @@ import type { Metadata } from 'next';
  * loses its handle on them. Any next/font/google family works here.
  */
 import { Inter_Tight, Schibsted_Grotesk } from 'next/font/google';
+import { JsonLd } from '@/components/JsonLd';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
+import { TrackingScriptsBody, TrackingScriptsHead } from '@/components/TrackingScripts';
+import { siteJsonLd } from '@/lib/json-ld';
 import { toLabeledHref, type SanityLabeledLink } from '@/lib/links';
-import { SITE, type FooterLinkGroup, type NavLink } from '@/lib/site';
+import { SITE_URL, type FooterLinkGroup, type NavLink } from '@/lib/site';
 import { safeFetch } from '@/sanity/client';
 import { FOOTER_QUERY, NAVIGATION_QUERY } from '@/sanity/queries';
+import { getSiteInformation } from '@/sanity/site-information';
 import './globals.css';
 
 const display = Schibsted_Grotesk({
@@ -31,25 +35,30 @@ const sans = Inter_Tight({
 });
 
 /**
- * Site-wide metadata defaults.
+ * Site-wide metadata defaults, from the `siteInformation` singleton.
  *
  * Per-page `seo` fields from the CMS layer on top of this (see
  * `src/sanity/metadata.ts`); anything a page leaves unset falls back here.
  * `metadataBase` is what turns a relative og:image path into an absolute URL,
- * so set NEXT_PUBLIC_SITE_URL in production or social previews will break.
+ * so set NEXT_PUBLIC_SITE_URL in production or social previews will break —
+ * the sitemap and robots routes read the same value.
  */
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
-  title: {
-    default: SITE.name,
-    template: `%s - ${SITE.name}`,
-  },
-  description: SITE.description,
-  openGraph: {
-    type: 'website',
-    siteName: SITE.name,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteInformation();
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: site.name,
+      template: `%s - ${site.name}`,
+    },
+    description: site.description,
+    openGraph: {
+      type: 'website',
+      siteName: site.name,
+    },
+  };
+}
 
 const options = { next: { revalidate: 30 } };
 
@@ -79,7 +88,8 @@ export default async function RootLayout({
 }>) {
   // Chrome only — a CMS outage leaves the header and footer bare rather than
   // failing every page. Page content is fetched with `client.fetch` and throws.
-  const [navigation, footer] = await Promise.all([
+  const [site, navigation, footer] = await Promise.all([
+    getSiteInformation(),
     safeFetch<SanityNavigation>(NAVIGATION_QUERY, {}, options),
     safeFetch<SanityFooter>(FOOTER_QUERY, {}, options),
   ]);
@@ -99,14 +109,21 @@ export default async function RootLayout({
 
   return (
     <html
-      lang='en'
+      lang={site.language}
       data-scroll-behavior='smooth'
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
+      <head>
+        <TrackingScriptsHead />
+      </head>
       <body className='min-h-full'>
-        <SiteHeader navLeft={navLeft} navRight={navRight} />
+        {/* Vendor-specified position: first element inside <body>. */}
+        <TrackingScriptsBody />
+        {/* The organisation and the site belong on every page. */}
+        <JsonLd data={siteJsonLd(site)} />
+        <SiteHeader siteName={site.name} navLeft={navLeft} navRight={navRight} />
         {children}
-        <SiteFooter linkGroups={linkGroups} copyright={footer?.copyright} />
+        <SiteFooter site={site} linkGroups={linkGroups} copyright={footer?.copyright} />
       </body>
     </html>
   );

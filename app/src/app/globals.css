@@ -50,6 +50,9 @@
   --color-brand-deep: #334155;
   --color-brand-fg: #f8fafc;
 
+  /* The one colour that must read as "something went wrong" — form errors. */
+  --color-danger: #b91c1c;
+
   /* --- Typography --------------------------------------------------------
      `--font-display` is used by h1/h2/h3 (see the base layer below).
      `--font-sans` is everything else. Both fall back to system fonts if the

@@ -9,6 +9,8 @@
     "deploy": "sanity deploy",
     "deploy-graphql": "sanity graphql deploy",
     "dev": "sanity dev",
+    "schema:extract": "sanity schema extract --force --enforce-required-fields --path ../app/src/sanity/schema.json",
+    "typegen": "npm run schema:extract && sanity typegen generate",
     "start": "sanity start"
   },
   "keywords": [

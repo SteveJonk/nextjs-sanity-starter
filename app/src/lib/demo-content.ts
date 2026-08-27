@@ -14,7 +14,7 @@
  * is generic on purpose, so nothing breaks when you swap in your own.
  */
 
-import { SITE } from '@/lib/site';
+import { SITE_DEFAULTS, telHref } from '@/lib/site';
 
 const WIDE = '/images/placeholder-wide.png';
 const PORTRAIT = '/images/placeholder-portrait.png';
@@ -287,5 +287,88 @@ export const CTA_BAND = {
   title: 'Tell us what you are building',
   body: 'An hour on a call, no charge and no pitch deck. Worst case you leave with a clearer scope and a name of someone better suited.',
   primaryCta: { label: 'Book a conversation', href: '#' },
-  secondaryCta: { label: SITE.phone, href: SITE.phoneHref },
+  secondaryCta: { label: SITE_DEFAULTS.phone, href: telHref(SITE_DEFAULTS.phone) },
 };
+
+/**
+ * The contact-form block's chrome, and the fields the seeded demo form gets.
+ *
+ * The fields double as the seed for the `form` document, so the shape here is
+ * a `formField` in the studio, not something the renderer invents. Two
+ * half-width fields in a row pair up — see `toFieldRows`.
+ */
+export const CONTACT_FORM = {
+  eyebrow: 'Contact',
+  title: 'Start a conversation',
+  lead: 'Tell us roughly what you have in mind. We read everything ourselves and answer within two working days.',
+  note: 'We only use your details to answer this message.',
+  aside: {
+    title: 'Rather talk first?',
+    body: 'Call during office hours or send a message and we will find a time.',
+    items: [
+      { icon: 'phone', title: SITE_DEFAULTS.phone, subtitle: 'Weekdays, 9:00 – 17:30' },
+      { icon: 'mail', title: SITE_DEFAULTS.email, subtitle: 'We answer within two days' },
+      {
+        icon: 'pin',
+        title: SITE_DEFAULTS.address[0],
+        subtitle: SITE_DEFAULTS.address[1],
+      },
+    ] as const,
+    cta: { label: 'Book a call', href: '#' },
+  },
+};
+
+/** The opener on /contact. The page below it is the form and its panel. */
+export const CONTACT_HERO = {
+  image: { src: WIDE, alt: 'The studio entrance from the street' },
+  breadcrumbLabel: 'Contact',
+  eyebrow: 'Say hello',
+  title: 'We read every',
+  titleHighlight: 'message ourselves',
+  lead: 'No ticket queue and no chatbot. Tell us what you are working on and the person who answers is the one you would work with.',
+};
+
+/** One field of the demo form, in the shape the `formField` type stores. */
+export type DemoFormField = {
+  label: string;
+  name: string;
+  type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'hidden';
+  width?: 'full' | 'half';
+  isRequired?: boolean;
+  placeholder?: string;
+  helpText?: string;
+  defaultValue?: string;
+  selectOptions?: string[];
+  checkboxOptions?: string[];
+};
+
+export const CONTACT_FORM_FIELDS: DemoFormField[] = [
+  { label: 'Name', name: 'name', type: 'text', width: 'half', isRequired: true },
+  { label: 'E-mail', name: 'email', type: 'email', width: 'half', isRequired: true },
+  { label: 'Phone', name: 'phone', type: 'tel', width: 'half' },
+  {
+    label: 'What is this about?',
+    name: 'subject',
+    type: 'select',
+    width: 'half',
+    placeholder: 'Choose one',
+    selectOptions: ['A new project', 'An existing site', 'Something else'],
+  },
+  {
+    label: 'Your message',
+    name: 'message',
+    type: 'textarea',
+    isRequired: true,
+    placeholder: 'A few sentences is plenty.',
+  },
+  {
+    label: 'Consent',
+    name: 'consent',
+    type: 'checkbox',
+    isRequired: true,
+    checkboxOptions: ['I agree that my details may be used to answer this message.'],
+  },
+  // Not drawn: tells the mail which page the form was sent from. The value is
+  // filled in by the renderer from the page context.
+  { label: 'Page', name: 'page', type: 'hidden', defaultValue: '{{path}}' },
+];

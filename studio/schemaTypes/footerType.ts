@@ -72,32 +72,6 @@ export const footerType = defineType({
       ],
     }),
     defineField({
-      name: 'socialLinks',
-      title: 'Social links',
-      type: 'array',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          name: 'socialLink',
-          fields: [
-            defineField({
-              name: 'platform',
-              type: 'string',
-              validation: (rule) => rule.required(),
-            }),
-            defineField({
-              name: 'url',
-              type: 'url',
-              validation: (rule) => rule.required().uri({scheme: ['http', 'https']}),
-            }),
-          ],
-          preview: {
-            select: {title: 'platform', subtitle: 'url'},
-          },
-        }),
-      ],
-    }),
-    defineField({
       name: 'copyright',
       title: 'Copyright text',
       type: 'string',

@@ -16,6 +16,7 @@
     "seed:forms": "tsx --env-file=.env scripts/seed.ts forms",
     "seed:home": "tsx --env-file=.env scripts/seed.ts home",
     "seed:about": "tsx --env-file=.env scripts/seed.ts about",
+    "seed:contact": "tsx --env-file=.env scripts/seed.ts contact",
     "seed:nav": "tsx --env-file=.env scripts/seed.ts nav"
   },
   "dependencies": {

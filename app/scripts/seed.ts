@@ -16,6 +16,7 @@
  * function, then register it in TARGETS below and add an npm script.
  */
 import {seedAbout} from './seed/about'
+import {seedContact} from './seed/contact'
 import {seedForms} from './seed/forms'
 import {seedHome} from './seed/home'
 import {seedNavigation} from './seed/navigation'
@@ -24,10 +25,11 @@ import {projectRef} from './seed/shared'
 
 const TARGETS = {
   site: seedSiteInformation,
-  // Before the pages: the about page references the contact form by id.
+  // Before the pages: the contact page references the form by id.
   forms: seedForms,
   home: seedHome,
   about: seedAbout,
+  contact: seedContact,
   // `nav` runs last by default: it links menu items to pages by slug, so the
   // pages need to exist first.
   nav: seedNavigation,

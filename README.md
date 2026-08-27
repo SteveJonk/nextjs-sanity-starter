@@ -10,7 +10,8 @@ studio and it is live.
 ## What's in it
 
 - **Page builder** — ten blocks, each one CMS-editable, composable in any order
-- **Two pages to start from** — a home page and a content page (`/about`)
+- **Three pages to start from** — a home page, a content page (`/about`) and a
+  working contact page
 - **SEO** — per-page meta title, description, OG image and `noindex`, driven
   from the CMS with sensible site-wide fallbacks
 - **Theming** — one `@theme` block controls every colour, font and spacing token
@@ -283,8 +284,13 @@ field is an editor's job, not a deploy.
 
 ```bash
 npm run seed:forms      # form settings + a working contact form
+npm run seed:contact    # /contact, the page that renders it
 npm run check:form      # assertions over the layout and the allow-list
 ```
+
+`seed:forms` writes the form document and the shared settings; `seed:contact`
+writes the page that references it, and `seed:nav` points the Contact menu
+items at that page. Run in that order, or let `npm run seed` do it for you.
 
 ### How a submission travels
 
@@ -373,7 +379,7 @@ app/
                       json-ld (schema.org), form-fields + form-mail
   src/sanity/         client, queries, image helpers, metadata mapping,
                       site-information fetch, generated types
-  scripts/seed/       one file per seeded page + the site singleton
+  scripts/seed/       one file per seeded page, plus the singletons and forms
   scripts/check-jsonld.ts   assertions over the structured data
   scripts/check-form.ts     assertions over the form layout + allow-list
 studio/
@@ -419,7 +425,8 @@ npm run dev          npm run build        npm run start
 npm run lint         npm run typecheck    npm run typegen
 npm run check:jsonld npm run check:form
 npm run seed         npm run seed:site    npm run seed:forms
-npm run seed:home    npm run seed:about   npm run seed:nav
+npm run seed:home    npm run seed:about   npm run seed:contact
+npm run seed:nav
 
 # studio/
 npm run dev          npm run build        npm run deploy

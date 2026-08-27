@@ -318,6 +318,16 @@ export const CONTACT_FORM = {
   },
 };
 
+/** The opener on /contact. The page below it is the form and its panel. */
+export const CONTACT_HERO = {
+  image: { src: WIDE, alt: 'The studio entrance from the street' },
+  breadcrumbLabel: 'Contact',
+  eyebrow: 'Say hello',
+  title: 'We read every',
+  titleHighlight: 'message ourselves',
+  lead: 'No ticket queue and no chatbot. Tell us what you are working on and the person who answers is the one you would work with.',
+};
+
 /** One field of the demo form, in the shape the `formField` type stores. */
 export type DemoFormField = {
   label: string;

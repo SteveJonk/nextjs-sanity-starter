@@ -7,7 +7,6 @@
  */
 import {
   BENEFITS,
-  CONTACT_FORM,
   BENEFITS_IMAGE,
   BENEFITS_SECTION,
   CROSS_LINKS,
@@ -18,7 +17,6 @@ import {
   STEPS,
   STEPS_SECTION,
 } from '../../src/lib/demo-content'
-import {CONTACT_FORM_ID} from './forms'
 import {
   cta,
   externalLink,
@@ -89,27 +87,6 @@ async function buildAboutContent(faqIds: string[]) {
         _ref: id,
         _key: key(id),
       })),
-    },
-    {
-      _type: 'contactForm',
-      _key: key('about-contact'),
-      eyebrow: CONTACT_FORM.eyebrow,
-      title: CONTACT_FORM.title,
-      lead: CONTACT_FORM.lead,
-      note: CONTACT_FORM.note,
-      // A reference, not an inline copy: the same form can sit on several
-      // pages and its fields are edited in one place.
-      form: {_type: 'reference' as const, _ref: CONTACT_FORM_ID},
-      aside: {
-        title: CONTACT_FORM.aside.title,
-        body: CONTACT_FORM.aside.body,
-        items: CONTACT_FORM.aside.items.map((item) => ({
-          ...item,
-          _type: 'contactItem' as const,
-          _key: key(item.title),
-        })),
-        cta: cta(CONTACT_FORM.aside.cta.label, CONTACT_FORM.aside.cta.href),
-      },
     },
     {
       _type: 'crossLinks',

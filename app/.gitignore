@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — only the real one; `.env.example` is committed
+# env files — only the real ones; `.env.example` is committed
 .env
+.env.local
 
 # vercel
 .vercel

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { PageBuilder } from '@/components/PageBuilder';
+import { HOME_SLUG } from '@/lib/links';
 import { client } from '@/sanity/client';
 import { pageMetadata } from '@/sanity/metadata';
 import { PAGE_QUERY } from '@/sanity/queries';
@@ -18,7 +19,7 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  if (slug === 'home') {
+  if (slug === HOME_SLUG) {
     return {};
   }
 
@@ -29,7 +30,7 @@ export default async function SanityPage({ params }: PageProps) {
   const { slug } = await params;
 
   // /home is the same document as /, so keep one canonical URL.
-  if (slug === 'home') {
+  if (slug === HOME_SLUG) {
     permanentRedirect('/');
   }
 

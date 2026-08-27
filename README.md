@@ -14,6 +14,8 @@ studio and it is live.
 - **SEO** — per-page meta title, description, OG image and `noindex`, driven
   from the CMS with sensible site-wide fallbacks
 - **Theming** — one `@theme` block controls every colour, font and spacing token
+- **Generated sitemap and robots.txt** — driven by the CMS, nothing to maintain
+- **Analytics** — GTM and the Meta pixel, both off until you set an id
 - **Seeding** — one command fills a fresh Sanity project with working content
 
 ## Setup
@@ -181,17 +183,61 @@ key in `metadata.ts` is added with a conditional spread and is simply absent
 when the CMS field is empty. Keep that pattern when adding fields.
 
 Set `NEXT_PUBLIC_SITE_URL` in production — it is what turns relative OG image
-paths into the absolute URLs social platforms require.
+paths into the absolute URLs social platforms require, and it is the origin the
+sitemap and `robots.txt` are built from.
+
+### Sitemap and robots.txt
+
+`/sitemap.xml` and `/robots.txt` are generated, not files you maintain:
+
+- **`app/src/app/sitemap.ts`** lists every published page straight from the CMS,
+  using each document's `_updatedAt` as `lastModified`. There are no per-page
+  route files to keep in sync — publish a page in the studio and it is in the
+  sitemap. The home page comes back with the slug `home` and is mapped to `/`
+  by `pathForSlug` in `src/lib/links.ts`, the same helper that resolves links.
+- **`app/src/app/robots.ts`** allows everything except `/api/` and points at the
+  sitemap.
+
+Both are absolute-URL routes, so they need `NEXT_PUBLIC_SITE_URL`; without it
+they fall back to `http://localhost:3000`, which is fine in development and
+wrong everywhere else.
+
+## Analytics
+
+`app/src/components/TrackingScripts.tsx` carries Google Tag Manager and the
+Meta (Facebook) pixel. Both are opt-in and off by default — a fresh clone loads
+no third-party scripts at all. Set either id in `app/.env` to turn one on:
+
+```bash
+NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID=GTM-XXXXXXX
+NEXT_PUBLIC_FACEBOOK_PIXEL_ID=123456789012345
+```
+
+The component has two halves, both already wired into `app/src/app/layout.tsx`:
+`TrackingScriptsHead` in `<head>` for the loaders, and `TrackingScriptsBody` as
+the first element inside `<body>` for the `<noscript>` fallbacks — that
+placement is what the vendors specify, and a `<noscript>` in `<head>` is
+invalid.
+
+The snippets are kept verbatim as the vendors publish them, which is why they
+are injected as inline strings; the only interpolated value is the id itself.
+Adding another tag means another `env` entry and another conditional block.
+
+**Consent:** the tags load as soon as the page does. If you need a cookie
+banner, gate GTM behind it and let GTM's own consent mode handle the rest —
+there is no consent layer in here.
 
 ## Layout
 
 ```
 app/
-  src/app/            routes: / , /[slug] , not-found, globals.css (the theme)
+  src/app/            routes: / , /[slug] , not-found, sitemap, robots
+                      globals.css (the theme)
   src/components/
     blocks/           one component per page-builder block
     layout/           header, footer
     ui/               small shared primitives
+    TrackingScripts   GTM + Meta pixel, both opt-in
   src/hooks/          scroll, sticky header, mobile nav
   src/lib/            site constants, demo copy, link resolution, env
   src/sanity/         client, queries, image helpers, metadata mapping,

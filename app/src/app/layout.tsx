@@ -12,6 +12,8 @@ import type { Metadata } from 'next';
 import { Inter_Tight, Schibsted_Grotesk } from 'next/font/google';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
+import { TrackingScriptsBody, TrackingScriptsHead } from '@/components/TrackingScripts';
+import { env } from '@/lib/env';
 import { toLabeledHref, type SanityLabeledLink } from '@/lib/links';
 import { SITE, type FooterLinkGroup, type NavLink } from '@/lib/site';
 import { safeFetch } from '@/sanity/client';
@@ -36,10 +38,11 @@ const sans = Inter_Tight({
  * Per-page `seo` fields from the CMS layer on top of this (see
  * `src/sanity/metadata.ts`); anything a page leaves unset falls back here.
  * `metadataBase` is what turns a relative og:image path into an absolute URL,
- * so set NEXT_PUBLIC_SITE_URL in production or social previews will break.
+ * so set NEXT_PUBLIC_SITE_URL in production or social previews will break —
+ * the sitemap and robots routes read the same value.
  */
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(env.siteUrl),
   title: {
     default: SITE.name,
     template: `%s - ${SITE.name}`,
@@ -103,7 +106,12 @@ export default async function RootLayout({
       data-scroll-behavior='smooth'
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
+      <head>
+        <TrackingScriptsHead />
+      </head>
       <body className='min-h-full'>
+        {/* Vendor-specified position: first element inside <body>. */}
+        <TrackingScriptsBody />
         <SiteHeader navLeft={navLeft} navRight={navRight} />
         {children}
         <SiteFooter linkGroups={linkGroups} copyright={footer?.copyright} />

@@ -124,10 +124,48 @@ Four touchpoints, in this order:
    `PAGE_QUERY`; a link you forget here arrives as an unresolved reference
 4. **`app/src/components/PageBuilder.tsx`** — add a `case`, and the component in
    `app/src/components/blocks/`
+5. **`npm run typegen`** — regenerate the types for the new fields (see
+   [Types](#types))
 
 Give the component optional props with defaults from `demo-content.ts` and it
 renders before an editor has filled anything in. Unknown block types log a
 warning and render nothing, so a half-built block never breaks a page.
+
+## Types
+
+The schema is the source of truth for types, not a second set of hand-written
+interfaces. `npm run typegen` extracts the studio schema and runs Sanity
+TypeGen over the GROQ in `app/src/sanity/queries.ts`:
+
+```bash
+cd app && npm run typegen     # or: cd studio && npm run typegen
+```
+
+Two files are written, both committed so a fresh clone type-checks without
+running anything:
+
+- **`app/src/sanity/schema.json`** — the extracted studio schema
+- **`app/src/sanity/sanity.types.ts`** — a type per document and object, a
+  `<NAME>_QUERY_RESULT` type per `defineQuery`, and a `@sanity/client` module
+  augmentation that maps each query string to its result
+
+That augmentation is what makes `client.fetch(PAGE_QUERY, { slug })` return
+`PAGE_QUERY_RESULT` on its own — no generic to pass, and no type to keep in
+sync by hand. Import the result types directly where you need to name one:
+
+```ts
+import type { PAGE_QUERY_RESULT } from '@/sanity/sanity.types';
+```
+
+The command runs from the studio, because the Sanity CLI needs a studio project
+root, but everything it reads and writes lives in the app — that mapping is the
+`typegen` block in `studio/sanity.cli.ts`. The app's `npm run typegen` is a
+thin delegate to it, so either directory works.
+
+Rerun it whenever you change a schema type or a query; the generated types go
+stale silently otherwise. Extraction loads `studio/sanity.config.ts`, so
+`studio/.env` needs `SANITY_STUDIO_PROJECT_ID` — no network call is made, and
+nothing about your project ends up in the generated files.
 
 ## SEO
 
@@ -156,7 +194,8 @@ app/
     ui/               small shared primitives
   src/hooks/          scroll, sticky header, mobile nav
   src/lib/            site constants, demo copy, link resolution, env
-  src/sanity/         client, queries, image helpers, metadata mapping
+  src/sanity/         client, queries, image helpers, metadata mapping,
+                      generated schema.json + sanity.types.ts
   scripts/seed/       one file per seeded page
 studio/
   schemaTypes/
@@ -170,11 +209,12 @@ studio/
 ```bash
 # app/
 npm run dev          npm run build        npm run start
-npm run lint         npm run typecheck
+npm run lint         npm run typecheck    npm run typegen
 npm run seed         npm run seed:home    npm run seed:about   npm run seed:nav
 
 # studio/
 npm run dev          npm run build        npm run deploy
+npm run typegen      npm run schema:extract
 ```
 
 ## Notes

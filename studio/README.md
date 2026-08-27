@@ -17,5 +17,18 @@ npm run dev            # http://localhost:3333
 - `schemaTypes/objects/` — shared field groups (`seo`, `link`, `cta`)
 - `schemaTypes/pageBuilderType.ts` — which blocks editors can insert
 - `structure.ts` — the studio's left-hand menu, including the singletons
+- `sanity.cli.ts` — CLI config, including the `typegen` paths that point at the
+  app
+
+## Types
+
+```bash
+npm run typegen        # schema extract + sanity typegen generate
+```
+
+Writes `../app/src/sanity/schema.json` and `../app/src/sanity/sanity.types.ts`.
+Typegen runs from here because the CLI needs a studio project root, but the
+GROQ it reads and the types it writes belong to the app. Run it after changing
+a schema type; the root `README.md` has the full story.
 
 See the root `README.md` for how a block travels from here to the front end.

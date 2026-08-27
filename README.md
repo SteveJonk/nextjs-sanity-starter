@@ -15,6 +15,7 @@ studio and it is live.
   from the CMS with sensible site-wide fallbacks
 - **Theming** — one `@theme` block controls every colour, font and spacing token
 - **Generated sitemap and robots.txt** — driven by the CMS, nothing to maintain
+- **Structured data** — one schema.org graph per page, checked by a script
 - **Analytics** — GTM and the Meta pixel, both off until you set an id
 - **Seeding** — one command fills a fresh Sanity project with working content
 
@@ -186,6 +187,45 @@ Set `NEXT_PUBLIC_SITE_URL` in production — it is what turns relative OG image
 paths into the absolute URLs social platforms require, and it is the origin the
 sitemap and `robots.txt` are built from.
 
+### Structured data
+
+Every page carries a schema.org JSON-LD graph, built in
+`app/src/lib/json-ld.ts` and rendered by `app/src/components/JsonLd.tsx`.
+
+It is **one graph per page**, with `@id`s pointing at each other, rather than
+separate blocks repeating the same facts:
+
+- `#organization` and `#website` are on every page — the layout renders them,
+  from `src/lib/site.ts` plus the footer document's social links (`sameAs`)
+- each page adds a `WebPage` with its title, description and OG image
+- a page with an `faqs` block is *also* an `FAQPage`, on the same node — two
+  nodes for one URL would claim two pages that do not exist
+- a `pageHero` block's breadcrumb label becomes a `BreadcrumbList`, so the
+  structured data matches the breadcrumb the visitor actually sees
+
+Two rules are load-bearing and easy to undo by accident:
+
+- **Empty in means absent out.** `prune` drops nulls, blank strings and empty
+  arrays, so a half-filled document never emits `"telephone": null`.
+- **One path to any node.** The page node deliberately has no `about` pointing
+  back at the organisation: it is already reachable via
+  `isPartOf` → `WebSite` → `publisher`, and a second path makes validators fill
+  that node in twice, along with anything attached to it (a rating, say). Adding
+  a second reference is exactly what Google reports as duplicate rich results.
+
+```bash
+npm run check:jsonld    # asserts both rules, plus the shapes above
+```
+
+That script is pure — no Sanity, no React — so it runs in about a second and
+fails loudly when a shape changes. It reads `app/.env` like the seed scripts do,
+because the graph's `@id`s are built from `NEXT_PUBLIC_SITE_URL`. Structured data is invisible in the browser;
+without something like this you find out weeks later, from Search Console.
+
+To make the company something more specific than a generic `Organization`
+(`LocalBusiness`, `Restaurant`, `RealEstateAgent`, …), change the one `@type` in
+`organizationJsonLd` — the sub-types add opening hours, price range and the rest.
+
 ### Sitemap and robots.txt
 
 `/sitemap.xml` and `/robots.txt` are generated, not files you maintain:
@@ -238,11 +278,14 @@ app/
     layout/           header, footer
     ui/               small shared primitives
     TrackingScripts   GTM + Meta pixel, both opt-in
+    JsonLd            renders one structured-data graph
   src/hooks/          scroll, sticky header, mobile nav
-  src/lib/            site constants, demo copy, link resolution, env
+  src/lib/            site constants, demo copy, link resolution, env,
+                      json-ld (schema.org graph builders)
   src/sanity/         client, queries, image helpers, metadata mapping,
                       generated schema.json + sanity.types.ts
   scripts/seed/       one file per seeded page
+  scripts/check-jsonld.ts   assertions over the structured data
 studio/
   schemaTypes/
     blocks/           one file per block
@@ -256,6 +299,7 @@ studio/
 # app/
 npm run dev          npm run build        npm run start
 npm run lint         npm run typecheck    npm run typegen
+npm run check:jsonld
 npm run seed         npm run seed:home    npm run seed:about   npm run seed:nav
 
 # studio/

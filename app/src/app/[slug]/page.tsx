@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
+import { JsonLd } from '@/components/JsonLd';
 import { PageBuilder } from '@/components/PageBuilder';
-import { HOME_SLUG } from '@/lib/links';
+import { HOME_SLUG, pathForSlug } from '@/lib/links';
 import { client } from '@/sanity/client';
-import { pageMetadata } from '@/sanity/metadata';
+import { pageBreadcrumbLabel, pageFaqs, pageJsonLd } from '@/lib/json-ld';
+import { pageMetadata, seoImageUrl } from '@/sanity/metadata';
 import { PAGE_QUERY } from '@/sanity/queries';
 
 const options = { next: { revalidate: 30 } };
@@ -40,9 +42,26 @@ export default async function SanityPage({ params }: PageProps) {
     notFound();
   }
 
+  const path = pathForSlug(slug);
+
   return (
-    <main>
-      <PageBuilder content={page.content} />
-    </main>
+    <>
+      <JsonLd
+        data={pageJsonLd({
+          path,
+          title: page.seo?.title || page.title,
+          description: page.seo?.description,
+          imageUrl: seoImageUrl(page.seo),
+          faqs: pageFaqs(page.content),
+          // Matches the breadcrumb the pageHero block renders: Home > this page.
+          trail: [
+            { name: pageBreadcrumbLabel(page.content) ?? page.title, path },
+          ],
+        })}
+      />
+      <main>
+        <PageBuilder content={page.content} />
+      </main>
+    </>
   );
 }

@@ -928,10 +928,11 @@ export type NAVIGATION_QUERY_RESULT =
 
 // Source: ../app/src/sanity/queries.ts
 // Variable: FOOTER_QUERY
-// Query: *[_id == "footer"][0]{    linkGroups[]{      title,      links[]{  ...,  internalLink->{    "slug": slug.current  }}    },    copyright  }
+// Query: *[_id == "footer"][0]{    linkGroups[]{      title,      links[]{  ...,  internalLink->{    "slug": slug.current  }}    },    // Profile URLs only — they feed sameAs in the structured data.    "socialLinks": socialLinks[].url,    copyright  }
 export type FOOTER_QUERY_RESULT =
   | {
       linkGroups: null;
+      socialLinks: null;
       copyright: null;
     }
   | {
@@ -948,6 +949,7 @@ export type FOOTER_QUERY_RESULT =
           _key: string;
         }> | null;
       }> | null;
+      socialLinks: Array<string> | null;
       copyright: string | null;
     }
   | null;
@@ -959,6 +961,6 @@ declare module "@sanity/client" {
     '\n  *[_type == "page" && slug.current == $slug][0]{\n    _id,\n    title,\n    slug,\n    seo,\n    content[]{\n      ...,\n      primaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      secondaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      highlight{\n        ...,\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      items[]{\n        ...,\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      _type == "faqs" => {\n        ...,\n        faqs[]->{\n          ...,\n          link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      }\n    }\n  }\n': PAGE_QUERY_RESULT;
     '\n  *[_type == "page" && defined(slug.current)]{\n    "slug": slug.current,\n    _updatedAt\n  }\n': PAGE_SLUGS_QUERY_RESULT;
     '\n  *[_id == "navigation"][0]{\n    navLeft[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n    navRight[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n  }\n': NAVIGATION_QUERY_RESULT;
-    '\n  *[_id == "footer"][0]{\n    linkGroups[]{\n      title,\n      links[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n    },\n    copyright\n  }\n': FOOTER_QUERY_RESULT;
+    '\n  *[_id == "footer"][0]{\n    linkGroups[]{\n      title,\n      links[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n    },\n    // Profile URLs only \u2014 they feed sameAs in the structured data.\n    "socialLinks": socialLinks[].url,\n    copyright\n  }\n': FOOTER_QUERY_RESULT;
   }
 }

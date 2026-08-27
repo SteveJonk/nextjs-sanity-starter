@@ -14,6 +14,12 @@ type SanityPage = {
   seo?: SanitySeo | null;
 } | null;
 
+/** The OG image for a page's `seo` object, sized for social cards. */
+export function seoImageUrl(seo: SanitySeo | null | undefined): string | null {
+  if (!seo?.ogImage) return null;
+  return urlFor(seo.ogImage)?.width(1200).height(630).fit('crop').url() ?? null;
+}
+
 /**
  * Map a page document's `seo` object onto Next metadata.
  *
@@ -39,9 +45,7 @@ export function pageMetadata(page: SanityPage, options?: Options): Metadata {
   const seo = page.seo ?? {};
   const title = seo.title || (options?.isHome ? null : page.title) || null;
   const description = seo.description || null;
-  const image = seo.ogImage
-    ? urlFor(seo.ogImage)?.width(1200).height(630).fit('crop').url()
-    : null;
+  const image = seoImageUrl(seo);
 
   return {
     // The root layout's `title.template` appends the site name.

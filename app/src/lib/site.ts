@@ -15,6 +15,13 @@ export const SITE = {
   email: 'hello@fieldnote.example',
   emailHref: 'mailto:hello@fieldnote.example',
   address: ['Prinsengracht 263', '1016 GV Amsterdam'],
+  /** ISO 3166-1 country code for the address above, used in structured data. */
+  addressCountry: 'NL',
+  /**
+   * BCP 47 language tag. Sets `<html lang>` and `inLanguage` in the structured
+   * data, so the two cannot drift apart.
+   */
+  language: 'en',
 } as const;
 
 export type NavLink = { href: string; label: string };

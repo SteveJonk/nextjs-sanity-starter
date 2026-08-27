@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { JsonLd } from '@/components/JsonLd';
 import { PageBuilder } from '@/components/PageBuilder';
 import { HOME_SLUG } from '@/lib/links';
 import { client } from '@/sanity/client';
-import { pageMetadata } from '@/sanity/metadata';
+import { pageFaqs, pageJsonLd } from '@/lib/json-ld';
+import { pageMetadata, seoImageUrl } from '@/sanity/metadata';
 import { PAGE_QUERY } from '@/sanity/queries';
 
 const options = { next: { revalidate: 30 } };
@@ -22,8 +24,19 @@ export default async function HomePage() {
   }
 
   return (
-    <main>
-      <PageBuilder content={page.content} />
-    </main>
+    <>
+      <JsonLd
+        data={pageJsonLd({
+          path: '/',
+          title: page.seo?.title || page.title,
+          description: page.seo?.description,
+          imageUrl: seoImageUrl(page.seo),
+          faqs: pageFaqs(page.content),
+        })}
+      />
+      <main>
+        <PageBuilder content={page.content} />
+      </main>
+    </>
   );
 }

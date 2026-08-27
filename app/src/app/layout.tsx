@@ -10,10 +10,12 @@ import type { Metadata } from 'next';
  * loses its handle on them. Any next/font/google family works here.
  */
 import { Inter_Tight, Schibsted_Grotesk } from 'next/font/google';
+import { JsonLd } from '@/components/JsonLd';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { TrackingScriptsBody, TrackingScriptsHead } from '@/components/TrackingScripts';
 import { env } from '@/lib/env';
+import { siteJsonLd } from '@/lib/json-ld';
 import { toLabeledHref, type SanityLabeledLink } from '@/lib/links';
 import { SITE, type FooterLinkGroup, type NavLink } from '@/lib/site';
 import { safeFetch } from '@/sanity/client';
@@ -66,6 +68,7 @@ type SanityFooter = {
     title?: string | null;
     links?: SanityLabeledLink[] | null;
   } | null> | null;
+  socialLinks?: Array<string | null> | null;
   copyright?: string | null;
 } | null;
 
@@ -100,9 +103,13 @@ export default async function RootLayout({
       links: asNavLinks(group.links),
     }));
 
+  // The organisation and the site belong on every page; the profile links come
+  // from the same footer document the footer below renders.
+  const site = siteJsonLd({ sameAs: footer?.socialLinks });
+
   return (
     <html
-      lang='en'
+      lang={SITE.language}
       data-scroll-behavior='smooth'
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
@@ -112,6 +119,7 @@ export default async function RootLayout({
       <body className='min-h-full'>
         {/* Vendor-specified position: first element inside <body>. */}
         <TrackingScriptsBody />
+        <JsonLd data={site} />
         <SiteHeader navLeft={navLeft} navRight={navRight} />
         {children}
         <SiteFooter linkGroups={linkGroups} copyright={footer?.copyright} />

@@ -76,6 +76,8 @@ export const FOOTER_QUERY = defineQuery(`
       title,
       links[]${linkExpansion}
     },
+    // Profile URLs only — they feed sameAs in the structured data.
+    "socialLinks": socialLinks[].url,
     copyright
   }
 `);

@@ -16,6 +16,8 @@ npm run dev            # http://localhost:3333
 - `schemaTypes/blocks/` — one file per page-builder block
 - `schemaTypes/objects/` — shared field groups (`seo`, `link`, `cta`)
 - `schemaTypes/pageBuilderType.ts` — which blocks editors can insert
+- `schemaTypes/formType.ts` + `objects/formFieldType.ts` — forms and their
+  fields; `formGeneralSettingsType.ts` holds the shared mail and spam settings
 - `structure.ts` — the studio's left-hand menu, including the singletons
 - `schemaTypes/siteInformationType.ts` — the site's own details (name, contact,
   language, social links); the app falls back to `app/src/lib/site.ts` per field

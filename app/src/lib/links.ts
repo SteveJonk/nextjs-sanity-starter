@@ -35,6 +35,11 @@ export function resolveHref(link: SanityLink | undefined | null): string | undef
   return link.href || undefined;
 }
 
+/** Internal hrefs are the ones the Next router can handle itself. */
+export function isInternalHref(href: string): boolean {
+  return href.startsWith('/');
+}
+
 export function toLabeledHref(
   link: SanityLabeledLink | undefined | null,
 ): { label: string; href: string } | undefined {

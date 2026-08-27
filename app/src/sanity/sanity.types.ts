@@ -22,6 +22,19 @@ export type Highlight = {
   cta?: Cta;
 };
 
+export type Aside = {
+  title?: string;
+  body?: string;
+  items?: Array<{
+    icon: "phone" | "whatsapp" | "mail" | "pin";
+    title: string;
+    subtitle?: string;
+    _type: "contactItem";
+    _key: string;
+  }>;
+  cta?: Cta;
+};
+
 export type SanityImageAssetReference = {
   _ref: string;
   _type: "reference";
@@ -44,6 +57,23 @@ export type ItemsObjectImage = {
   hotspot?: SanityImageHotspot;
   crop?: SanityImageCrop;
   _type: "image";
+};
+
+export type FormReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "form";
+};
+
+export type ContactForm = {
+  _type: "contactForm";
+  eyebrow: string;
+  title: string;
+  lead: string;
+  form: FormReference;
+  note?: string;
+  aside?: Aside;
 };
 
 export type CtaBand = {
@@ -251,11 +281,39 @@ export type PageBuilder = Array<
     } & Faqs)
   | ({
       _key: string;
+    } & ContactForm)
+  | ({
+      _key: string;
     } & CrossLinks)
   | ({
       _key: string;
     } & CtaBand)
 >;
+
+export type FormField = {
+  _type: "formField";
+  label: string;
+  name: string;
+  type:
+    | "text"
+    | "email"
+    | "tel"
+    | "url"
+    | "textarea"
+    | "select"
+    | "radio"
+    | "checkbox"
+    | "file"
+    | "hidden";
+  defaultValue?: string;
+  width?: "full" | "half";
+  isRequired?: boolean;
+  placeholder?: string;
+  helpText?: string;
+  selectOptions?: Array<string>;
+  radioOptions?: Array<string>;
+  checkboxOptions?: Array<string>;
+};
 
 export type PageReference = {
   _ref: string;
@@ -293,6 +351,88 @@ export type Seo = {
   noIndex?: boolean;
 };
 
+export type FormGeneralSettings = {
+  _id: string;
+  _type: "formGeneralSettings";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  adminEmail: string;
+  fromEmail?: string;
+  fromName?: string;
+  confirmationSubject: string;
+  confirmationMessage?: string;
+  mailjetApiKey?: string;
+  mailjetApiSecret?: string;
+  mailLogo?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  primaryColor?: string;
+  textColor?: string;
+  recaptchaEnabled?: boolean;
+  recaptchaSiteKey?: string;
+  recaptchaSecretKey?: string;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+};
+
+export type Form = {
+  _id: string;
+  _type: "form";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title: string;
+  showTitle?: boolean;
+  mode: "simple" | "steps";
+  fields?: Array<
+    {
+      _key: string;
+    } & FormField
+  >;
+  steps?: Array<{
+    title?: string;
+    fields: Array<
+      {
+        _key: string;
+      } & FormField
+    >;
+    _type: "formStep";
+    _key: string;
+  }>;
+  submitButtonText: string;
+  nextButtonText?: string;
+  backButtonText?: string;
+  redirectAfterSubmit?: boolean;
+  redirectLink?: Link;
+  successTitle?: string;
+  successBody?: string;
+  mailRecipients?: string;
+  mailSubject?: string;
+  mailMessage?: string;
+  sendCopyToSubmitter?: boolean;
+  copySubject?: string;
+  copyMessage?: string;
+};
+
 export type SiteInformation = {
   _id: string;
   _type: "siteInformation";
@@ -320,22 +460,6 @@ export type SiteInformation = {
     _key: string;
   }>;
   badges?: Array<string>;
-};
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x: number;
-  y: number;
-  height: number;
-  width: number;
 };
 
 export type Footer = {
@@ -513,9 +637,12 @@ export type Geopoint = {
 
 export type AllSanitySchemaTypes =
   | Highlight
+  | Aside
   | SanityImageAssetReference
   | ObjectImage
   | ItemsObjectImage
+  | FormReference
+  | ContactForm
   | CtaBand
   | CrossLinks
   | FaqReference
@@ -528,13 +655,16 @@ export type AllSanitySchemaTypes =
   | Intro
   | Hero
   | PageBuilder
+  | FormField
   | PageReference
   | Cta
   | Link
   | Seo
-  | SiteInformation
+  | FormGeneralSettings
   | SanityImageCrop
   | SanityImageHotspot
+  | Form
+  | SiteInformation
   | Footer
   | Navigation
   | Faq
@@ -551,7 +681,7 @@ export type AllSanitySchemaTypes =
 
 // Source: ../app/src/sanity/queries.ts
 // Variable: PAGE_QUERY
-// Query: *[_type == "page" && slug.current == $slug][0]{    _id,    title,    slug,    seo,    content[]{      ...,      primaryCta{  ...,  internalLink->{    "slug": slug.current  }},      secondaryCta{  ...,  internalLink->{    "slug": slug.current  }},      link{  ...,  internalLink->{    "slug": slug.current  }},      cta{  ...,  internalLink->{    "slug": slug.current  }},      highlight{        ...,        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      items[]{        ...,        link{  ...,  internalLink->{    "slug": slug.current  }},        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      _type == "faqs" => {        ...,        faqs[]->{          ...,          link{  ...,  internalLink->{    "slug": slug.current  }}        },        link{  ...,  internalLink->{    "slug": slug.current  }}      }    }  }
+// Query: *[_type == "page" && slug.current == $slug][0]{    _id,    title,    slug,    seo,    content[]{      ...,      primaryCta{  ...,  internalLink->{    "slug": slug.current  }},      secondaryCta{  ...,  internalLink->{    "slug": slug.current  }},      link{  ...,  internalLink->{    "slug": slug.current  }},      cta{  ...,  internalLink->{    "slug": slug.current  }},      highlight{        ...,        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      items[]{        ...,        link{  ...,  internalLink->{    "slug": slug.current  }},        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      // The form lives in its own document so several pages can share it, and      // the public half of the reCAPTCHA settings rides along — the secret      // stays server-side, in the submit route.      _type == "contactForm" => {        form->{  _id,  title,  showTitle,  mode,  fields[],  steps[]{    title,    fields[]  },  submitButtonText,  nextButtonText,  backButtonText,  successTitle,  successBody,  redirectAfterSubmit,  redirectLink{  ...,  internalLink->{    "slug": slug.current  }}},        // The panel's own CTA is nested, so the top-level link projections do        // not reach it — an internal link would arrive as a bare reference.        aside{          ...,          cta{  ...,  internalLink->{    "slug": slug.current  }}        },        "recaptcha": *[_type == "formGeneralSettings"][0]{          recaptchaEnabled,          recaptchaSiteKey        }      },      _type == "faqs" => {        ...,        faqs[]->{          ...,          link{  ...,  internalLink->{    "slug": slug.current  }}        },        link{  ...,  internalLink->{    "slug": slug.current  }}      }    }  }
 export type PAGE_QUERY_RESULT = {
   _id: string;
   title: string;
@@ -592,6 +722,77 @@ export type PAGE_QUERY_RESULT = {
         link: null;
         cta: null;
         highlight: null;
+      }
+    | {
+        _key: string;
+        _type: "contactForm";
+        eyebrow: string;
+        title: string;
+        lead: string;
+        form: {
+          _id: string;
+          title: string;
+          showTitle: boolean | null;
+          mode: "simple" | "steps";
+          fields: Array<
+            {
+              _key: string;
+            } & FormField
+          > | null;
+          steps: Array<{
+            title: string | null;
+            fields: Array<
+              {
+                _key: string;
+              } & FormField
+            >;
+          }> | null;
+          submitButtonText: string;
+          nextButtonText: string | null;
+          backButtonText: string | null;
+          successTitle: string | null;
+          successBody: string | null;
+          redirectAfterSubmit: boolean | null;
+          redirectLink: {
+            _type: "link";
+            linkType: "external" | "internal";
+            internalLink: {
+              slug: string;
+            } | null;
+            href?: string;
+          } | null;
+        };
+        note?: string;
+        aside: {
+          title?: string;
+          body?: string;
+          items?: Array<{
+            icon: "mail" | "phone" | "pin" | "whatsapp";
+            title: string;
+            subtitle?: string;
+            _type: "contactItem";
+            _key: string;
+          }>;
+          cta: {
+            _type: "cta";
+            label: string;
+            linkType: "external" | "internal";
+            internalLink: {
+              slug: string;
+            } | null;
+            href?: string;
+          } | null;
+        } | null;
+        primaryCta: null;
+        secondaryCta: null;
+        link: null;
+        cta: null;
+        highlight: null;
+        items: null;
+        recaptcha: {
+          recaptchaEnabled: boolean | null;
+          recaptchaSiteKey: string | null;
+        } | null;
       }
     | {
         _key: string;
@@ -1018,14 +1219,70 @@ export type FOOTER_QUERY_RESULT =
     }
   | null;
 
+// Source: ../app/src/sanity/queries.ts
+// Variable: FORM_QUERY
+// Query: *[_id == $formId && _type == "form"][0]{    _id,    title,    mailRecipients,    mailSubject,    mailMessage,    sendCopyToSubmitter,    copySubject,    copyMessage,    "fields": select(      mode == "steps" => steps[].fields[]{label, name, type, isRequired},      fields[]{label, name, type, isRequired}    )  }
+export type FORM_QUERY_RESULT = {
+  _id: string;
+  title: string;
+  mailRecipients: string | null;
+  mailSubject: string | null;
+  mailMessage: string | null;
+  sendCopyToSubmitter: boolean | null;
+  copySubject: string | null;
+  copyMessage: string | null;
+  fields: Array<{
+    label: string;
+    name: string;
+    type:
+      | "checkbox"
+      | "email"
+      | "file"
+      | "hidden"
+      | "radio"
+      | "select"
+      | "tel"
+      | "text"
+      | "textarea"
+      | "url";
+    isRequired: boolean | null;
+  }> | null;
+} | null;
+
+// Source: ../app/src/sanity/queries.ts
+// Variable: FORM_SETTINGS_QUERY
+// Query: *[_type == "formGeneralSettings"][0]{    adminEmail,    fromEmail,    fromName,    mailLogo,    primaryColor,    textColor,    mailjetApiKey,    mailjetApiSecret,    confirmationSubject,    confirmationMessage,    recaptchaEnabled,    recaptchaSecretKey  }
+export type FORM_SETTINGS_QUERY_RESULT = {
+  adminEmail: string;
+  fromEmail: string | null;
+  fromName: string | null;
+  mailLogo: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  } | null;
+  primaryColor: string | null;
+  textColor: string | null;
+  mailjetApiKey: string | null;
+  mailjetApiSecret: string | null;
+  confirmationSubject: string;
+  confirmationMessage: string | null;
+  recaptchaEnabled: boolean | null;
+  recaptchaSecretKey: string | null;
+} | null;
+
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n  *[_type == "page" && slug.current == $slug][0]{\n    _id,\n    title,\n    slug,\n    seo,\n    content[]{\n      ...,\n      primaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      secondaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      highlight{\n        ...,\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      items[]{\n        ...,\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      _type == "faqs" => {\n        ...,\n        faqs[]->{\n          ...,\n          link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      }\n    }\n  }\n': PAGE_QUERY_RESULT;
+    '\n  *[_type == "page" && slug.current == $slug][0]{\n    _id,\n    title,\n    slug,\n    seo,\n    content[]{\n      ...,\n      primaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      secondaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      highlight{\n        ...,\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      items[]{\n        ...,\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      // The form lives in its own document so several pages can share it, and\n      // the public half of the reCAPTCHA settings rides along \u2014 the secret\n      // stays server-side, in the submit route.\n      _type == "contactForm" => {\n        form->{\n  _id,\n  title,\n  showTitle,\n  mode,\n  fields[],\n  steps[]{\n    title,\n    fields[]\n  },\n  submitButtonText,\n  nextButtonText,\n  backButtonText,\n  successTitle,\n  successBody,\n  redirectAfterSubmit,\n  redirectLink{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n},\n        // The panel\'s own CTA is nested, so the top-level link projections do\n        // not reach it \u2014 an internal link would arrive as a bare reference.\n        aside{\n          ...,\n          cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        "recaptcha": *[_type == "formGeneralSettings"][0]{\n          recaptchaEnabled,\n          recaptchaSiteKey\n        }\n      },\n      _type == "faqs" => {\n        ...,\n        faqs[]->{\n          ...,\n          link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      }\n    }\n  }\n': PAGE_QUERY_RESULT;
     '\n  *[_type == "page" && defined(slug.current)]{\n    "slug": slug.current,\n    _updatedAt\n  }\n': PAGE_SLUGS_QUERY_RESULT;
     '\n  *[_id == "navigation"][0]{\n    navLeft[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n    navRight[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n  }\n': NAVIGATION_QUERY_RESULT;
     '\n  *[_id == "siteInformation"][0]{\n    name,\n    description,\n    language,\n    phone,\n    email,\n    address,\n    addressCountry,\n    badges,\n    // Only the URLs: they become sameAs in the structured data.\n    "socialLinks": socialLinks[].url,\n    "logoUrl": logo.asset->url\n  }\n': SITE_INFORMATION_QUERY_RESULT;
     '\n  *[_id == "footer"][0]{\n    linkGroups[]{\n      title,\n      links[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n    },\n    copyright\n  }\n': FOOTER_QUERY_RESULT;
+    '\n  *[_id == $formId && _type == "form"][0]{\n    _id,\n    title,\n    mailRecipients,\n    mailSubject,\n    mailMessage,\n    sendCopyToSubmitter,\n    copySubject,\n    copyMessage,\n    "fields": select(\n      mode == "steps" => steps[].fields[]{label, name, type, isRequired},\n      fields[]{label, name, type, isRequired}\n    )\n  }\n': FORM_QUERY_RESULT;
+    '\n  *[_type == "formGeneralSettings"][0]{\n    adminEmail,\n    fromEmail,\n    fromName,\n    mailLogo,\n    primaryColor,\n    textColor,\n    mailjetApiKey,\n    mailjetApiSecret,\n    confirmationSubject,\n    confirmationMessage,\n    recaptchaEnabled,\n    recaptchaSecretKey\n  }\n': FORM_SETTINGS_QUERY_RESULT;
   }
 }

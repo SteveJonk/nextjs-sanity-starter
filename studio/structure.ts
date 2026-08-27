@@ -1,5 +1,6 @@
 import {BlockElementIcon} from '@sanity/icons/BlockElement'
 import {CogIcon} from '@sanity/icons/Cog'
+import {EnvelopeIcon} from '@sanity/icons/Envelope'
 import {MenuIcon} from '@sanity/icons/Menu'
 import type {StructureResolver} from 'sanity/structure'
 
@@ -8,7 +9,7 @@ import type {StructureResolver} from 'sanity/structure'
  * menu entry, and are filtered out of the generic document list below so they
  * cannot be created twice.
  */
-const SINGLETONS = ['siteInformation', 'navigation', 'footer']
+const SINGLETONS = ['siteInformation', 'navigation', 'footer', 'formGeneralSettings']
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -39,8 +40,20 @@ export const structure: StructureResolver = (S) =>
       S.divider(),
       S.documentTypeListItem('page').title('Pages'),
       S.documentTypeListItem('faq').title('FAQs'),
+      S.documentTypeListItem('form').title('Forms'),
+      S.listItem()
+        .title('Form settings')
+        .id('formGeneralSettings')
+        .icon(EnvelopeIcon)
+        .child(
+          S.document()
+            .schemaType('formGeneralSettings')
+            .documentId('formGeneralSettings')
+            .title('Form settings'),
+        ),
       S.divider(),
       ...S.documentTypeListItems().filter(
-        (item) => item.getId() && !['page', 'faq', ...SINGLETONS].includes(item.getId()!),
+        (item) =>
+          item.getId() && !['page', 'faq', 'form', ...SINGLETONS].includes(item.getId()!),
       ),
     ])

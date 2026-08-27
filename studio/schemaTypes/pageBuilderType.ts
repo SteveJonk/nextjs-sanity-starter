@@ -20,6 +20,7 @@ export const pageBuilderType = defineType({
     defineArrayMember({type: 'benefits'}),
     defineArrayMember({type: 'steps'}),
     defineArrayMember({type: 'faqs'}),
+    defineArrayMember({type: 'contactForm'}),
     // Closers
     defineArrayMember({type: 'crossLinks'}),
     defineArrayMember({type: 'ctaBand'}),

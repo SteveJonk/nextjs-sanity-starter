@@ -65,7 +65,7 @@ export default async function SanityPage({ params }: PageProps) {
         })}
       />
       <main>
-        <PageBuilder content={page.content} />
+        <PageBuilder content={page.content} path={path} />
       </main>
     </>
   );

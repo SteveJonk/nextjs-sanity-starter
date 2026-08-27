@@ -16,6 +16,7 @@ studio and it is live.
 - **Theming** — one `@theme` block controls every colour, font and spacing token
 - **Generated sitemap and robots.txt** — driven by the CMS, nothing to maintain
 - **Structured data** — one schema.org graph per page, checked by a script
+- **Forms** — CMS-authored, one page or several steps, mailed and spam-gated
 - **Analytics** — GTM and the Meta pixel, both off until you set an id
 - **Everything in the CMS** — pages, menus and the site's own details, with
   code-level defaults behind every field
@@ -41,7 +42,7 @@ npm run dev                   # http://localhost:3333
 cd ../app
 cp .env.example .env          # same project id, plus a write token for seeding
 npm install
-npm run seed                  # site details, the home + about pages, the menus
+npm run seed                  # site details, forms, the pages and the menus
 npm run dev                   # http://localhost:3000
 ```
 
@@ -70,6 +71,7 @@ without renaming anything:
 | `inverse`, `inverse-fg`                          | dark bands and the text on them         |
 | `accent`, `accent-deep`                          | soft fills, tags, quiet highlights      |
 | `accent-strong`                                  | links, focus rings, the one loud colour |
+| `danger`                                         | form errors                             |
 | `brand`, `brand-hover`, `brand-deep`, `brand-fg` | primary buttons and the loudest UI      |
 
 No component references a raw colour, so editing those values recolours the
@@ -133,6 +135,7 @@ replace it, along with the matching details in `app/src/lib/site.ts`.
 | `benefits`   | Icon list beside an image                        |
 | `steps`      | Numbered process with a sticky image             |
 | `faqs`       | Accordion, fed by reusable FAQ documents         |
+| `contactForm`| A form from Forms, with a contact panel beside it |
 | `crossLinks` | Two cards pointing at related pages              |
 | `ctaBand`    | Closing call to action over a photo              |
 
@@ -144,7 +147,9 @@ Four touchpoints, in this order:
 2. **`studio/schemaTypes/index.ts`** and **`pageBuilderType.ts`** — register it
    so editors can insert it
 3. **`app/src/sanity/queries.ts`** — project any link or reference fields inside
-   `PAGE_QUERY`; a link you forget here arrives as an unresolved reference
+   `PAGE_QUERY`; a link you forget here arrives as an unresolved reference, and
+   a nested one (inside an object, as on `contactForm`'s panel) needs its own
+   branch
 4. **`app/src/components/PageBuilder.tsx`** — add a `case`, and the component in
    `app/src/components/blocks/`
 5. **`npm run typegen`** — regenerate the types for the new fields (see
@@ -235,7 +240,7 @@ Two rules are load-bearing and easy to undo by accident:
   a second reference is exactly what Google reports as duplicate rich results.
 
 ```bash
-npm run check:jsonld    # asserts both rules, plus the shapes above
+npm run check:jsonld npm run check:form    # asserts both rules, plus the shapes above
 ```
 
 That script is pure — no Sanity, no React, no `.env` — so it runs on a fresh
@@ -261,6 +266,69 @@ To make the company something more specific than a generic `Organization`
 Both are absolute-URL routes, so they need `NEXT_PUBLIC_SITE_URL`; without it
 they fall back to `http://localhost:3000`, which is fine in development and
 wrong everywhere else.
+
+## Forms
+
+Forms are authored in the studio and rendered by one component, so adding a
+field is an editor's job, not a deploy.
+
+- **Forms** (a document) — the fields, the button labels, the confirmation, and
+  where the answers are mailed. Switch **Type** to *In steps* and the same
+  fields spread over several steps with a progress bar and per-step validation.
+- **Form settings** (a singleton) — the shared mail settings, the mail's logo
+  and colours, and the reCAPTCHA switch.
+- **`contactForm`** (a block) — drops a form onto a page, with the surrounding
+  copy and an optional contact panel beside it. The form is a *reference*, so
+  the same one can appear on several pages and its fields live in one place.
+
+```bash
+npm run seed:forms      # form settings + a working contact form
+npm run check:form      # assertions over the layout and the allow-list
+```
+
+### How a submission travels
+
+1. `FormRenderer` posts the whole form — every step at once — to
+   `/api/submit-form`.
+2. The route re-fetches the form document. **That document is the allow-list**:
+   a key the browser posts that the form does not declare never reaches the
+   mail. `npm run check:form` asserts that the query and the renderer agree,
+   because if they drift the form quietly stops recording answers.
+3. Answers are rendered into an HTML + plain-text mail (`src/lib/form-mail.ts`)
+   and sent through Mailjet. Swapping providers means rewriting one function,
+   `sendViaMailjet`; nothing else is provider-specific.
+
+### Field types and layout
+
+Text, e-mail, phone, URL, textarea, dropdown, radio, checkboxes, file upload
+and hidden. Every field has a width: **two consecutive half-width fields share
+a row**, everything else gets its own.
+
+A **hidden** field carries context the visitor never types. Its value may
+contain `{{token}}` placeholders, filled from what the page passes as
+`context` — the starter passes `{{path}}`, so the mail says which page the form
+was sent from. An unknown token is sent empty rather than leaking the raw
+`{{…}}`.
+
+### Mail and spam settings
+
+The credentials belong in `app/.env`, not in the CMS — a Sanity dataset is
+readable by anyone who knows the project id. The route prefers the environment
+and falls back to Form settings, which is convenient locally and wrong in
+production:
+
+```bash
+MAILJET_API_KEY=        MAILJET_API_SECRET=
+MAILJET_FROM_EMAIL=     CONTACT_ADMIN_EMAIL=
+RECAPTCHA_SECRET_KEY=   # only when reCAPTCHA is switched on
+```
+
+reCAPTCHA is off by default, and while it is off **no Google script is loaded**
+— same stance as the analytics tags. Switch it on in Form settings, put the
+site key there (it is public and ships in the page) and the secret in `.env`.
+The route fails closed: any doubt about a token is a rejected submission.
+
+Uploads are capped at 5 MB and travel as mail attachments; nothing is stored.
 
 ## Analytics
 
@@ -291,21 +359,23 @@ there is no consent layer in here.
 
 ```
 app/
-  src/app/            routes: / , /[slug] , not-found, sitemap, robots
-                      globals.css (the theme)
+  src/app/            routes: / , /[slug] , not-found, sitemap, robots,
+                      api/submit-form, globals.css (the theme)
   src/components/
     blocks/           one component per page-builder block
     layout/           header, footer
     ui/               small shared primitives
+    form/             the form renderer and its field components
     TrackingScripts   GTM + Meta pixel, both opt-in
     JsonLd            renders one structured-data graph
   src/hooks/          scroll, sticky header, mobile nav
   src/lib/            site defaults, demo copy, link resolution, env,
-                      json-ld (schema.org graph builders)
+                      json-ld (schema.org), form-fields + form-mail
   src/sanity/         client, queries, image helpers, metadata mapping,
                       site-information fetch, generated types
   scripts/seed/       one file per seeded page + the site singleton
   scripts/check-jsonld.ts   assertions over the structured data
+  scripts/check-form.ts     assertions over the form layout + allow-list
 studio/
   schemaTypes/
     blocks/           one file per block
@@ -347,9 +417,9 @@ deliberately only covers the studio.
 # app/
 npm run dev          npm run build        npm run start
 npm run lint         npm run typecheck    npm run typegen
-npm run check:jsonld
-npm run seed         npm run seed:site    npm run seed:home
-npm run seed:about   npm run seed:nav
+npm run check:jsonld npm run check:form
+npm run seed         npm run seed:site    npm run seed:forms
+npm run seed:home    npm run seed:about   npm run seed:nav
 
 # studio/
 npm run dev          npm run build        npm run deploy

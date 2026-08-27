@@ -40,7 +40,7 @@ export default async function HomePage() {
         })}
       />
       <main>
-        <PageBuilder content={page.content} />
+        <PageBuilder content={page.content} path='/' />
       </main>
     </>
   );

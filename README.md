@@ -18,6 +18,8 @@ studio and it is live.
 - **Generated sitemap and robots.txt** — driven by the CMS, nothing to maintain
 - **Structured data** — one schema.org graph per page, checked by a script
 - **Forms** — CMS-authored, one page or several steps, mailed and spam-gated
+- **Media library** — a studio panel listing every upload, with search,
+  usage per file and a delete button for the ones nothing points at
 - **Analytics** — GTM and the Meta pixel, both off until you set an id
 - **Everything in the CMS** — pages, menus and the site's own details, with
   code-level defaults behind every field
@@ -336,6 +338,89 @@ The route fails closed: any doubt about a token is a rejected submission.
 
 Uploads are capped at 5 MB and travel as mail attachments; nothing is stored.
 
+## Media library
+
+Sanity's own asset browser only opens from an image or file field on a document.
+So by default there is no way to see *what* is in the media library, let alone
+to throw away something nothing uses any more. The **Media** panel in the
+studio's left-hand menu fills that gap.
+
+`studio/structure.ts` hangs it as `S.component(MediaLibrary)` between FAQs and
+Forms — an entry of its own, not a document type. The code is three files, no
+plugin and no extra dependency:
+
+| File                       | What is in it                                             |
+| -------------------------- | --------------------------------------------------------- |
+| `studio/tools/MediaTool.tsx`   | the panel: grid, search, detail column, upload, delete |
+| `studio/tools/mediaData.ts`    | the GROQ queries, the types and the formatting helpers |
+| `studio/tools/mediaStyles.ts`  | inline styles, on top of `tools/panelStyles.ts`        |
+
+### What it does
+
+- **Overview** — every `sanity.imageAsset` and `sanity.fileAsset` document,
+  newest first, as thumbnails with a name and a file size. Files nothing uses
+  are labelled *unused*. The grid renders 60 cards at a time, with a *show more*
+  underneath.
+- **Search** — on filename, title, alt text, description, extension and mime
+  type. Every word has to match, so "garden jpg" finds `back-garden.jpg` but not
+  `garden.png`. Beside it, a filter for images / files / unused.
+- **Detail** — click a file for its filename, title, alt text, description,
+  kind, mime type, dimensions, size, upload and update date, the document id and
+  a link to the original. Under that, the documents that use it, each one a link
+  that opens the document.
+- **Adding** — the button, or drag onto the area at the top. Several files at
+  once is fine; images go to Sanity as an `image` asset, everything else (a pdf,
+  say) as a `file` asset.
+- **Deleting** — only when no document references the file. The button is not
+  there for a file that is in use, and there is a confirmation step. Deleting is
+  permanent; Sanity has no trash for assets.
+
+### What "in use" means
+
+At least one document references the file — `references($id)`. That **includes
+drafts**: a photo that only appears in an unpublished draft is in use, and
+rightly so, because Sanity refuses to delete such an asset itself. In the detail
+column a draft and its published version are shown as one document (marked
+*draft* when only a draft exists).
+
+The overview shows a yes/no label rather than a count: `references()` counts the
+draft pair twice, so a number there would not match the list in the detail
+column.
+
+### How it loads: two stages
+
+Working out where a file is used is the expensive part — it has to walk the
+whole dataset per file. So it does not stand in the way:
+
+1. `ASSETS_QUERY` fetches the list (only the fields a card and the search box
+   need; not `metadata`, which carries a base64 LQIP and a colour palette per
+   image). The grid is on screen with that.
+2. `USAGE_QUERY` runs *alongside* it and returns only the *ids* of files
+   something points at:
+   `*[_type in $types && defined(*[references(^._id)][0])]._id`.
+   `defined(…[0])` only has to search until the first hit instead of counting
+   every reference, and the answer is a list of strings rather than an extra
+   field on every file.
+
+While step 2 runs the cards show no label and the *unused* filter is disabled.
+If step 2 fails, the labels stay away and the rest keeps working — the detail
+panel does its own check when a file is opened, and *that* is the count the
+delete button goes by.
+
+Search and filter happen in the browser, over the list already fetched: no round
+trip to Sanity per keystroke.
+
+### Worth knowing
+
+- Counting usage is still work for the server, even in two stages. With
+  thousands of assets the *unused* label can appear a couple of seconds after
+  the grid. That is by design; there is nothing to wait for.
+- Permissions follow the logged-in editor: `useClient()` uses their session.
+  Anyone who may not delete assets in Sanity sees the API's error here.
+- `typeLabel()` in `mediaData.ts` maps document types to the names editors know
+  them by. A type that is not in the map falls back to its raw name, so adding a
+  document type only needs a line there when the raw name would confuse someone.
+
 ## Analytics
 
 `app/src/components/TrackingScripts.tsx` carries Google Tag Manager and the
@@ -386,6 +471,7 @@ studio/
   schemaTypes/
     blocks/           one file per block
     objects/          shared field groups (seo, link, cta)
+  tools/              custom studio panels (the media library)
   structure.ts        studio menu and singletons
                       (site information, navigation, footer)
 ```

@@ -1,8 +1,10 @@
 import {BlockElementIcon} from '@sanity/icons/BlockElement'
 import {CogIcon} from '@sanity/icons/Cog'
 import {EnvelopeIcon} from '@sanity/icons/Envelope'
+import {ImagesIcon} from '@sanity/icons/Images'
 import {MenuIcon} from '@sanity/icons/Menu'
 import type {StructureResolver} from 'sanity/structure'
+import {MediaLibrary} from './tools/MediaTool'
 
 /**
  * Documents that exist exactly once. They get a fixed `_id` and a top-level
@@ -40,7 +42,17 @@ export const structure: StructureResolver = (S) =>
       S.divider(),
       S.documentTypeListItem('page').title('Pages'),
       S.documentTypeListItem('faq').title('FAQs'),
-      S.documentTypeListItem('form').title('Forms'),
+      S.divider(),
+      // Not a document type but a panel of its own: Sanity's asset browser only
+      // opens from a field on a document, so without this the media library as
+      // a whole is invisible. See `tools/MediaTool.tsx`.
+      S.listItem()
+        .title('Media')
+        .id('media')
+        .icon(ImagesIcon)
+        .child(S.component(MediaLibrary).title('Media').id('media')),
+      S.divider(),
+      S.documentTypeListItem('form').title('Forms').icon(EnvelopeIcon),
       S.listItem()
         .title('Form settings')
         .id('formGeneralSettings')

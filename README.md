@@ -503,6 +503,32 @@ missing, rather than part way through a build.
 **The app is not deployed here.** Host it wherever you like — the workflow
 deliberately only covers the studio.
 
+## Deploying the app
+
+`.github/workflows/build-app-image.yml` builds the app into a Docker image and
+pushes it to GHCR (`ghcr.io/<owner>/<repo>-app`) on every push to `main` that
+touches `app/`, and can be run by hand from the Actions tab. One build at a
+time — a new push cancels a run in progress.
+
+`app/Dockerfile` is a multi-stage build producing a standalone Next.js server
+(`node server.js`, port 3000) — small enough to run anywhere that pulls a
+container image, Coolify included.
+
+Configure it once, under **Settings → Secrets and variables → Actions**:
+
+| Where     | Name                            | Needed?  | What it is                                    |
+| --------- | -------------------------------- | -------- | ---------------------------------------------- |
+| Variables | `NEXT_PUBLIC_SANITY_PROJECT_ID`  | yes      | Same project id as `app/.env`                   |
+| Variables | `NEXT_PUBLIC_SANITY_DATASET`     | yes      | Same dataset as `app/.env`                      |
+
+Both are `NEXT_PUBLIC_*`, so they get baked into the client bundle at build
+time and are passed in as Docker build args rather than runtime secrets. No
+`GHCR` login token to add — the workflow authenticates with the automatic
+`GITHUB_TOKEN`, scoped to `packages: write`.
+
+**The studio is not built here.** This workflow only covers `app/`; see
+[Deploying the studio](#deploying-the-studio) above.
+
 ## Commands
 
 ```bash

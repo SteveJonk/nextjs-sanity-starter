@@ -35,17 +35,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Docker-image-namen moeten lowercase zijn; owner en repo-naam zijn dat
-      # niet altijd (bv. "SteveJonk").
+      # Docker-image-namen moeten lowercase zijn; github.repository_owner is
+      # dat niet altijd (bv. "SteveJonk").
       - name: Lowercase image naam
         id: image
-        run: echo "name=ghcr.io/${OWNER,,}/${REPO,,}-app" >> "$GITHUB_OUTPUT"
+        run: echo "name=ghcr.io/${OWNER,,}/hart-huis-app" >> "$GITHUB_OUTPUT"
         env:
           OWNER: ${{ github.repository_owner }}
-          REPO: ${{ github.event.repository.name }}
 
       # NEXT_PUBLIC_* worden in de client-bundle gebakken, dus die moeten bij
       # het bouwen bekend zijn — geen geheimen, dus gewoon als build-arg.
+      # SENTRY_AUTH_TOKEN gaat via --secret (BuildKit), zodat hij niet in de
+      # image-laag-historie belandt.
       - name: Build en push image
         uses: docker/build-push-action@v6
         with:
@@ -58,5 +59,21 @@ jobs:
           build-args: |
             NEXT_PUBLIC_SANITY_PROJECT_ID=${{ vars.NEXT_PUBLIC_SANITY_PROJECT_ID }}
             NEXT_PUBLIC_SANITY_DATASET=${{ vars.NEXT_PUBLIC_SANITY_DATASET }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Coolify pulled de image zelf niet automatisch bij een nieuwe :latest
+      # push — dit vertelt hem expliciet om te redeployen. URL + token komen
+      # uit de Webhooks-tab van de resource in Coolify.
+      # /api/v1/deploy is POST (de GET-voorbeelden in Coolify's eigen docs
+      # zijn verouderd — GET geeft nu 405 "This endpoint has changed to a
+      # POST request.").
+      - name: Coolify redeploy triggeren
+        run: |
+          curl --fail --request POST "$COOLIFY_WEBHOOK_URL" \
+            --header "Authorization: Bearer $COOLIFY_API_TOKEN"
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}

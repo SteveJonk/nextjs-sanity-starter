@@ -9,6 +9,11 @@ on:
       - ".github/workflows/build-app-image.yml"
   workflow_dispatch:
 
+# Image-naam is standaard de repo-naam; zet repo-variable IMAGE_NAME om te
+# overriden.
+env:
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || github.event.repository.name }}
+
 # Eén build tegelijk; een nieuwe push annuleert een lopende run.
 concurrency:
   group: build-app-image
@@ -39,7 +44,7 @@ jobs:
       # dat niet altijd (bv. "SteveJonk").
       - name: Lowercase image naam
         id: image
-        run: echo "name=ghcr.io/${OWNER,,}/hart-huis-app" >> "$GITHUB_OUTPUT"
+        run: echo "name=ghcr.io/${OWNER,,}/${IMAGE_NAME,,}" >> "$GITHUB_OUTPUT"
         env:
           OWNER: ${{ github.repository_owner }}
 

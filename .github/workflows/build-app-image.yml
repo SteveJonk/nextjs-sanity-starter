@@ -51,7 +51,8 @@ jobs:
       # NEXT_PUBLIC_* worden in de client-bundle gebakken, dus die moeten bij
       # het bouwen bekend zijn — geen geheimen, dus gewoon als build-arg.
       # SENTRY_AUTH_TOKEN gaat via --secret (BuildKit), zodat hij niet in de
-      # image-laag-historie belandt.
+      # image-laag-historie belandt. Alle Sentry-waardes zijn optioneel: zonder
+      # NEXT_PUBLIC_SENTRY_DSN bouwt de app zonder Sentry.
       - name: Build en push image
         uses: docker/build-push-action@v6
         with:
@@ -64,6 +65,9 @@ jobs:
           build-args: |
             NEXT_PUBLIC_SANITY_PROJECT_ID=${{ vars.NEXT_PUBLIC_SANITY_PROJECT_ID }}
             NEXT_PUBLIC_SANITY_DATASET=${{ vars.NEXT_PUBLIC_SANITY_DATASET }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ vars.SENTRY_PROJECT }}
           secrets: |
             sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
           cache-from: type=gha

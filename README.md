@@ -446,6 +446,55 @@ Adding another tag means another `env` entry and another conditional block.
 banner, gate GTM behind it and let GTM's own consent mode handle the rest —
 there is no consent layer in here.
 
+## Error tracking (Sentry)
+
+Off by default. A fresh clone loads no Sentry code at all — not in the browser
+bundle, not on the server, and `next.config.ts` skips the build plugin. One
+variable turns the whole thing on:
+
+```bash
+NEXT_PUBLIC_SENTRY_DSN=https://<key>@<org>.ingest.de.sentry.io/<project>
+```
+
+The DSN is the master switch. Every entry point checks it before importing
+`@sentry/nextjs`, and in the browser the import is dynamic, so without a DSN
+the Sentry chunk is never fetched.
+
+Three more, all optional:
+
+| Variable | When | What |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | runtime | Share of transactions traced, 0-1. Defaults to `1`; lower it once the site has traffic |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | build | Slugs from the Sentry URL, for source-map upload |
+| `SENTRY_AUTH_TOKEN` | build | Token with `project:releases`. Without it the build works, it just skips the upload and stack traces stay minified |
+
+The pieces:
+
+```
+app/sentry.options.ts          shared Sentry.init options + the DSN switch
+app/sentry.server.config.ts    node runtime init
+app/sentry.edge.config.ts      edge runtime init
+app/src/instrumentation.ts         loads those two, and onRequestError
+app/src/instrumentation-client.ts  browser init, dynamically imported
+app/src/app/global-error.tsx       last-resort boundary, reports the error
+app/next.config.ts             withSentryConfig, only when a DSN is set
+```
+
+Two settings in `next.config.ts` worth knowing about:
+
+- **`tunnelRoute: '/monitoring'`** routes browser reports through the app so
+  ad-blockers do not swallow them. It costs you the traffic, and it must not
+  collide with a middleware matcher.
+- **`widenClientFileUpload: false`** — turning it on roughly doubles
+  source-map upload size and build memory, which OOM-kills small build servers.
+  Turn it on only if you have the headroom.
+
+In CI the values come from **Settings → Secrets and variables → Actions**:
+`NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG` and `SENTRY_PROJECT` as *variables*
+(they are not secrets and are baked in at build time), `SENTRY_AUTH_TOKEN` as a
+*secret* — the Dockerfile mounts it with BuildKit so it never lands in an image
+layer. Set none of them and the image builds without Sentry.
+
 ## Layout
 
 ```

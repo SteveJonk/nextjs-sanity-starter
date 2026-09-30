@@ -2,9 +2,10 @@ import type { MetadataRoute } from 'next';
 import { HOME_SLUG, pathForSlug } from '@/lib/links';
 import { SITE_URL } from '@/lib/site';
 import { client } from '@/sanity/client';
+import { sanityCache } from '@/sanity/fetch';
 import { PAGE_SLUGS_QUERY } from '@/sanity/queries';
 
-const options = { next: { revalidate: 30 } };
+const options = sanityCache;
 
 /**
  * Every CMS page, listed from the CMS itself.

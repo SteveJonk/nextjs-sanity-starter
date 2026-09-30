@@ -576,4 +576,5 @@ npm run typegen      npm run schema:extract
   an error, not as a silently empty page.
 - Placeholder images live in `app/public/images/`. Replace them with real photos
   and update the paths in `demo-content.ts`.
-- Pages are revalidated every 30 seconds (`revalidate: 30` in the route files).
+- Sanity reads are cached under one tag (`sanity`, see `src/sanity/fetch.ts`). A Sanity webhook POSTing to `/api/revalidate` (secret: `SANITY_REVALIDATE_SECRET`) expires it on publish; an hourly revalidate is the fallback.
+- `app/netlify/functions/keep-warm.mts` pings the site every 10 minutes to avoid cold starts. It only applies when hosted on Netlify and is ignored elsewhere.

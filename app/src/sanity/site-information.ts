@@ -1,10 +1,11 @@
 import { cache } from 'react';
 import { resolveSiteInformation, type SiteInformation } from '@/lib/site';
 import { safeFetch } from '@/sanity/client';
+import { sanityCache } from '@/sanity/fetch';
 import { SITE_INFORMATION_QUERY } from '@/sanity/queries';
 import type { SITE_INFORMATION_QUERY_RESULT } from '@/sanity/sanity.types';
 
-const options = { next: { revalidate: 30 } };
+const options = sanityCache;
 
 /**
  * The site's details, with defaults filled in where the CMS is empty.

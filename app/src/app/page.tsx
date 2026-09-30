@@ -4,12 +4,13 @@ import { JsonLd } from '@/components/JsonLd';
 import { PageBuilder } from '@/components/PageBuilder';
 import { HOME_SLUG } from '@/lib/links';
 import { client } from '@/sanity/client';
+import { sanityCache } from '@/sanity/fetch';
 import { pageFaqs, pageJsonLd } from '@/lib/json-ld';
 import { pageMetadata, seoImageUrl } from '@/sanity/metadata';
 import { getSiteInformation } from '@/sanity/site-information';
 import { PAGE_QUERY } from '@/sanity/queries';
 
-const options = { next: { revalidate: 30 } };
+const options = sanityCache;
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await client.fetch(PAGE_QUERY, { slug: HOME_SLUG }, options);

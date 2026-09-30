@@ -18,6 +18,7 @@ import { siteJsonLd } from '@/lib/json-ld';
 import { toLabeledHref, type SanityLabeledLink } from '@/lib/links';
 import { SITE_URL, type FooterLinkGroup, type NavLink } from '@/lib/site';
 import { safeFetch } from '@/sanity/client';
+import { sanityCache } from '@/sanity/fetch';
 import { FOOTER_QUERY, NAVIGATION_QUERY } from '@/sanity/queries';
 import { getSiteInformation } from '@/sanity/site-information';
 import './globals.css';
@@ -60,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const options = { next: { revalidate: 30 } };
+const options = sanityCache;
 
 type SanityNavigation = {
   navLeft?: SanityLabeledLink[] | null;

@@ -7,11 +7,7 @@
  */
 export const SANITY_TAG = 'sanity';
 
-/**
- * Safety net only. If the webhook is misconfigured or a delivery is lost, the
- * cache still refreshes within an hour instead of staying stale.
- */
-export const REVALIDATE = 3600;
+export const REVALIDATE = 60;
 
 /** Fetch options shared by every cached Sanity read. */
 export const sanityCache = { next: { revalidate: REVALIDATE, tags: [SANITY_TAG] } };

@@ -46,7 +46,7 @@ export const servicesType = defineType({
                   validation: (rule) => rule.required(),
                 }),
               ],
-              validation: (rule) => rule.required(),
+              validation: (rule) => rule.required().assetRequired(),
             }),
             defineField({name: 'link', type: 'link', title: 'Link', validation: (rule) => rule.required()}),
           ],

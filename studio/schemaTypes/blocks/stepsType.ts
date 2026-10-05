@@ -26,7 +26,7 @@ export const stepsType = defineType({
               name: 'image',
               type: 'image',
               options: {hotspot: true},
-              validation: (rule) => rule.required(),
+              validation: (rule) => rule.required().assetRequired(),
             }),
           ],
           preview: {

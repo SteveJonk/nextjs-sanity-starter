@@ -23,6 +23,7 @@ export const seoType = defineType({
       title: 'Open Graph Image',
       type: 'image',
       options: {hotspot: true},
+      validation: (rule) => rule.assetRequired(),
     }),
     defineField({
       name: 'noIndex',

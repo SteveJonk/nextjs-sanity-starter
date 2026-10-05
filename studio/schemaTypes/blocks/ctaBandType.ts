@@ -19,7 +19,7 @@ export const ctaBandType = defineType({
           validation: (rule) => rule.required(),
         }),
       ],
-      validation: (rule) => rule.required(),
+      validation: (rule) => rule.required().assetRequired(),
     }),
     defineField({name: 'eyebrow', type: 'string', validation: (rule) => rule.required()}),
     defineField({name: 'title', type: 'string', validation: (rule) => rule.required()}),

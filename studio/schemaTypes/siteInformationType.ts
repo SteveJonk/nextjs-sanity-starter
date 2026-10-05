@@ -42,6 +42,7 @@ export const siteInformationType = defineType({
       group: 'identity',
       description:
         'Only used in the structured data — search engines show it beside the site name. The visible logo is a component.',
+      validation: (rule) => rule.assetRequired(),
     }),
     defineField({
       name: 'language',

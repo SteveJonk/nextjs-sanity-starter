@@ -13,8 +13,22 @@ export type SanityImage = SanityImageSource & {
   alt?: string;
 };
 
-export function urlFor(source: SanityImageSource) {
-  return builder?.image(source) ?? null;
+/**
+ * An image field can exist in Sanity without a file — only an `alt` filled
+ * in, or the photo removed again. `@sanity/image-url` throws on that
+ * ("Unable to resolve image URL from source"), which fails the whole build.
+ * Treat such objects as "no image".
+ */
+function hasImage(source: SanityImageSource | undefined | null): boolean {
+  if (!source) return false;
+  if (typeof source === 'string') return true;
+  const s = source as { asset?: unknown; _ref?: unknown; _id?: unknown; url?: unknown };
+  return Boolean(s.asset || s._ref || s._id || s.url);
+}
+
+export function urlFor(source: SanityImageSource | undefined | null) {
+  if (!hasImage(source)) return null;
+  return builder?.image(source as SanityImageSource) ?? null;
 }
 
 export function imageSrc(
@@ -22,7 +36,7 @@ export function imageSrc(
   width: number,
   height?: number,
 ): string | null {
-  if (!source) return null;
+  if (!hasImage(source)) return null;
   let builder = urlFor(source)?.width(width);
   if (height) builder = builder?.height(height).fit('crop');
   return builder?.url() ?? null;

@@ -23,6 +23,7 @@ export const heroType = defineType({
               validation: (rule) => rule.required(),
             }),
           ],
+          validation: (rule) => rule.assetRequired(),
         }),
       ],
       validation: (rule) => rule.min(1).max(3).required(),

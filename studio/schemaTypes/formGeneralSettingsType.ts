@@ -87,6 +87,7 @@ export const formGeneralSettingsType = defineType({
       type: 'image',
       group: 'branding',
       description: 'Sits at the top of every form mail. Leave empty to show only the sender name.',
+      validation: (rule) => rule.assetRequired(),
     }),
     defineField({
       name: 'primaryColor',

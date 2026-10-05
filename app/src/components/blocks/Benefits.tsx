@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/Image";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Lead } from "@/components/ui/Lead";
 import { Reveal } from "@/components/ui/Reveal";

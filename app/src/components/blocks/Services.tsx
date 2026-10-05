@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "@/components/ui/Image";
 import { ArrowLinkLabel } from "@/components/ui/ArrowLink";
 import { Button } from "@/components/ui/Button";
 import { Lead } from "@/components/ui/Lead";

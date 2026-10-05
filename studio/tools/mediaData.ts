@@ -47,6 +47,23 @@ export const ASSETS_QUERY = `*[_type in $types] | order(_createdAt desc) {
  */
 export const USAGE_QUERY = `*[_type in $types && defined(*[references(^._id)][0])]._id`
 
+/**
+ * Images no document references, drafts included. Fetched again right before
+ * a cleanup instead of using the list on screen, which may be stale by then.
+ * PDFs and other files are deliberately left out.
+ */
+export const UNUSED_IMAGES_QUERY = `*[_type == "sanity.imageAsset" && !defined(*[references(^._id)][0])]._id`
+
+/** How many deletes go into one transaction. */
+export const CLEANUP_BATCH = 50
+
+/** Splits a list into pieces of `size`. */
+export function chunk<T>(items: T[], size: number): T[][] {
+  const batches: T[][] = []
+  for (let i = 0; i < items.length; i += size) batches.push(items.slice(i, i + size))
+  return batches
+}
+
 /** One file with everything on it, plus where it is used. */
 export const ASSET_QUERY = `{
   "asset": *[_id == $id][0],

@@ -7,7 +7,10 @@ import {
   ASSET_QUERY,
   ASSETS_QUERY,
   ASSET_TYPES,
+  CLEANUP_BATCH,
+  UNUSED_IMAGES_QUERY,
   USAGE_QUERY,
+  chunk,
   dedupeUsage,
   displayName,
   formatBytes,
@@ -36,6 +39,13 @@ import {
  * field on a document, so there is no way to see what is actually in the
  * dataset, let alone to throw away something nothing points at any more.
  *
+ * "Delete unused images" removes every image nothing references in one go. It
+ * fetches that list again right before deleting (not the list on screen, which
+ * may be stale) and deletes in transactions of `CLEANUP_BATCH`. If a
+ * transaction is rejected — because something has started referencing an image
+ * in the meantime — that batch is retried one by one, so the rest still goes
+ * through. Files (pdf) are left alone.
+ *
  * Deleting is only possible when no document references the file — that is not
  * just our rule, Sanity refuses it too. Drafts count: a photo that only appears
  * in an unpublished draft is in use.
@@ -60,6 +70,11 @@ const PAGE_SIZE = 60
 
 type Status = {tone: 'ok' | 'error'; text: string}
 
+type Cleanup =
+  | {step: 'idle'}
+  | {step: 'confirm'}
+  | {step: 'busy'; done: number; total: number}
+
 export function MediaLibrary() {
   const client = useClient({apiVersion: API_VERSION})
 
@@ -76,6 +91,7 @@ export function MediaLibrary() {
   const [uploading, setUploading] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [status, setStatus] = useState<Status | null>(null)
+  const [cleanup, setCleanup] = useState<Cleanup>({step: 'idle'})
   const fileInput = useRef<HTMLInputElement>(null)
 
   const reload = useCallback(() => setVersion((v) => v + 1), [])
@@ -177,8 +193,64 @@ export function MediaLibrary() {
     [reload],
   )
 
+  const cleanUp = useCallback(async () => {
+    setStatus(null)
+    setOpened(null)
+    setCleanup({step: 'busy', done: 0, total: 0})
+
+    try {
+      const ids = await client.fetch<string[]>(UNUSED_IMAGES_QUERY)
+      let done = 0
+      const failed: string[] = []
+      setCleanup({step: 'busy', done, total: ids.length})
+
+      for (const batch of chunk(ids, CLEANUP_BATCH)) {
+        const transaction = client.transaction()
+        for (const id of batch) transaction.delete(id)
+        try {
+          await transaction.commit({visibility: 'async'})
+          done += batch.length
+        } catch {
+          // One image that has started being used in the meantime fails the
+          // whole transaction; delete this batch one by one instead.
+          for (const id of batch) {
+            try {
+              await client.delete(id)
+              done += 1
+            } catch (error) {
+              failed.push(`${id}: ${error instanceof Error ? error.message : String(error)}`)
+            }
+          }
+        }
+        setCleanup({step: 'busy', done, total: ids.length})
+      }
+
+      setStatus(
+        ids.length === 0
+          ? {tone: 'ok', text: 'There were no unused images left.'}
+          : failed.length
+            ? {
+                tone: 'error',
+                text: `Deleted ${done} of ${ids.length} unused images.\n${failed.join('\n')}`,
+              }
+            : {tone: 'ok', text: `${done} unused image${done === 1 ? '' : 's'} deleted.`},
+      )
+    } catch (error) {
+      setStatus({
+        tone: 'error',
+        text: `Cleanup failed: ${error instanceof Error ? error.message : String(error)}`,
+      })
+    }
+
+    setCleanup({step: 'idle'})
+    reload()
+  }, [client, reload])
+
   const total = assets?.length ?? 0
   const unused = used ? (assets ?? []).filter((a) => !used.has(a._id)).length : null
+  const unusedImages = used
+    ? (assets ?? []).filter((a) => a._type === 'sanity.imageAsset' && !used.has(a._id)).length
+    : null
 
   return (
     <div style={m.wrapper}>
@@ -259,6 +331,42 @@ export function MediaLibrary() {
               (unused === null ? ' — counting usage…' : ` — ${unused} unused`)}
         </span>
       </div>
+
+      {unusedImages !== null && (unusedImages > 0 || cleanup.step !== 'idle') && (
+        <div style={{...styles.row, alignItems: 'center'}}>
+          {cleanup.step === 'idle' && (
+            <button type="button" style={m.danger} onClick={() => setCleanup({step: 'confirm'})}>
+              Delete unused images ({unusedImages})
+            </button>
+          )}
+          {cleanup.step === 'confirm' && (
+            <>
+              <span style={{...styles.intro, margin: 0}}>
+                {unusedImages} image{unusedImages === 1 ? '' : 's'} that no document (not even a
+                draft) references will be permanently deleted. This cannot be undone. PDFs and other
+                files are kept.
+              </span>
+              <button type="button" style={m.danger} onClick={() => void cleanUp()}>
+                Yes, delete them all
+              </button>
+              <button
+                type="button"
+                style={styles.secondary}
+                onClick={() => setCleanup({step: 'idle'})}
+              >
+                Cancel
+              </button>
+            </>
+          )}
+          {cleanup.step === 'busy' && (
+            <span style={{...styles.intro, margin: 0}}>
+              {cleanup.total === 0
+                ? 'Looking up unused images…'
+                : `Deleting… ${cleanup.done} of ${cleanup.total}`}
+            </span>
+          )}
+        </div>
+      )}
 
       {loadError && <div style={styles.notice}>Could not load: {loadError}</div>}
 

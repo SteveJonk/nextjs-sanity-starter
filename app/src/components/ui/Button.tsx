@@ -30,6 +30,15 @@ const sizeClass = {
   sm: 'px-6 py-[14px] text-btn-sm',
 } as const;
 
+/** Class string for anything that should look like a button (e.g. a `<button>`). */
+export function buttonClass(
+  variant: ButtonVariant = 'primary',
+  size: keyof typeof sizeClass = 'md',
+  className?: string,
+) {
+  return cn(baseClass, variantClass[variant], sizeClass[size], className);
+}
+
 export function Button({
   href,
   children,
@@ -41,7 +50,7 @@ export function Button({
   return onClick ? (
     <a
       href={href}
-      className={cn(baseClass, variantClass[variant], sizeClass[size], className)}
+      className={buttonClass(variant, size, className)}
       onClick={onClick}
     >
       {children}
@@ -49,7 +58,7 @@ export function Button({
   ) : (
     <Link
       href={href}
-      className={cn(baseClass, variantClass[variant], sizeClass[size], className)}
+      className={buttonClass(variant, size, className)}
       onClick={onClick}
     >
       {children}

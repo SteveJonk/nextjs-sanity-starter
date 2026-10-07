@@ -477,6 +477,8 @@ app/sentry.edge.config.ts      edge runtime init
 app/src/instrumentation.ts         loads those two, and onRequestError
 app/src/instrumentation-client.ts  browser init, dynamically imported
 app/src/app/global-error.tsx       last-resort boundary, reports the error
+app/src/app/sentry-test/page.tsx   test page: throws a client and a server error
+app/src/app/api/sentry-test/route.ts  always throws, for the server test
 app/next.config.ts             withSentryConfig, only when a DSN is set
 ```
 
@@ -488,6 +490,12 @@ Two settings in `next.config.ts` worth knowing about:
 - **`widenClientFileUpload: false`** — turning it on roughly doubles
   source-map upload size and build memory, which OOM-kills small build servers.
   Turn it on only if you have the headroom.
+
+To check the connection after a deploy, open **`/sentry-test`** and press both
+buttons. Each one raises an error that should show up in Sentry → Issues within
+a minute, named "Sentry test: client error" and "Sentry test: server error".
+The page is noindex/nofollow and not in the sitemap, but it is public, so
+anyone who finds it can add those two issues to your project.
 
 In CI the values come from **Settings → Secrets and variables → Actions**:
 `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG` and `SENTRY_PROJECT` as *variables*

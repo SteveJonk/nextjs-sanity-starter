@@ -552,6 +552,12 @@ missing, rather than part way through a build.
 **The app is not deployed here.** Host it wherever you like — the workflow
 deliberately only covers the studio.
 
+For Netlify, `app/netlify.toml` has the build settings: set the site's base
+directory to `app` so Netlify picks it up. It publishes `.next` (the UI default
+deploys raw source, so every route 404s) and tells the secrets scanner to skip
+the public `NEXT_PUBLIC_*` and Sentry org/project values. `SENTRY_AUTH_TOKEN`
+is a real secret and stays scanned.
+
 ## Commands
 
 ```bash

@@ -1,0 +1,11 @@
+[build]
+  # Netlify's Next.js runtime serves from .next; publishing the app root itself
+  # (the UI default here) deploys raw source files, so every route 404s.
+  publish = ".next"
+
+# NEXT_PUBLIC_* values ship in the browser bundle by design and are short,
+# common strings ("production"), so the scanner flags them in source files.
+# The Sentry org/project slugs are not secrets either and can match ordinary
+# text in the build output. SENTRY_AUTH_TOKEN is a real secret: keep it out.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SANITY_API_VERSION,NEXT_PUBLIC_SANITY_DATASET,NEXT_PUBLIC_SANITY_PROJECT_ID,NEXT_PUBLIC_SENTRY_DSN,NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,SENTRY_ORG,SENTRY_PROJECT"

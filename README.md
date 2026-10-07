@@ -467,6 +467,7 @@ Three more, all optional:
 | `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | runtime | Share of transactions traced, 0-1. Defaults to `1`; lower it once the site has traffic |
 | `SENTRY_ORG` / `SENTRY_PROJECT` | build | Slugs from the Sentry URL, for source-map upload |
 | `SENTRY_AUTH_TOKEN` | build | Token with `project:releases`. Without it the build works, it just skips the upload and stack traces stay minified |
+| `SENTRY_TEST_SECRET` | runtime | Unlocks `/sentry-test?secret=…`. Unset, the test page and route are 404 |
 
 The pieces:
 
@@ -479,6 +480,7 @@ app/src/instrumentation-client.ts  browser init, dynamically imported
 app/src/app/global-error.tsx       last-resort boundary, reports the error
 app/src/app/sentry-test/page.tsx   test page: throws a client and a server error
 app/src/app/api/sentry-test/route.ts  always throws, for the server test
+app/src/lib/sentry-test.ts         SENTRY_TEST_SECRET check for both
 app/next.config.ts             withSentryConfig, only when a DSN is set
 ```
 
@@ -491,11 +493,12 @@ Two settings in `next.config.ts` worth knowing about:
   source-map upload size and build memory, which OOM-kills small build servers.
   Turn it on only if you have the headroom.
 
-To check the connection after a deploy, open **`/sentry-test`** and press both
-buttons. Each one raises an error that should show up in Sentry → Issues within
-a minute, named "Sentry test: client error" and "Sentry test: server error".
-The page is noindex/nofollow and not in the sitemap, but it is public, so
-anyone who finds it can add those two issues to your project.
+To check the connection after a deploy, set `SENTRY_TEST_SECRET` (server-only,
+a long random string), open **`/sentry-test?secret=<that value>`** and press
+both buttons. Each one raises an error that should show up in Sentry → Issues
+within a minute, named "Sentry test: client error" and "Sentry test: server
+error". Without the env var, or with the wrong secret, the page and its API
+route answer 404. The page is also noindex/nofollow and not in the sitemap.
 
 In CI the values come from **Settings → Secrets and variables → Actions**:
 `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG` and `SENTRY_PROJECT` as *variables*

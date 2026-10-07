@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { buttonClass } from '@/components/ui/Button';
 
 // Literal env read: Next inlines it at build time, like everywhere else Sentry is gated.
@@ -11,8 +11,14 @@ const enabled = Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN);
  * you can check that both reach Sentry. Each shows up there as a new issue
  * named "Sentry test: …".
  */
-export function SentryTest() {
+export function SentryTest({ secret }: { secret: string }) {
   const [status, setStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Drop the secret from the address bar, so it stays out of the browser
+    // history and out of the page URL Sentry records with the client error.
+    window.history.replaceState(null, '', window.location.pathname);
+  }, []);
 
   function throwClientError() {
     setStatus('Client error thrown. Look for "Sentry test: client error" in Sentry → Issues.');
@@ -25,11 +31,16 @@ export function SentryTest() {
   async function triggerServerError() {
     setStatus('Calling /api/sentry-test …');
     try {
-      const response = await fetch('/api/sentry-test', { cache: 'no-store' });
+      const response = await fetch('/api/sentry-test', {
+        cache: 'no-store',
+        headers: { 'x-sentry-test-secret': secret },
+      });
       setStatus(
         response.status === 500
           ? 'Server error thrown (500). Look for "Sentry test: server error" in Sentry → Issues.'
-          : `Unexpected response: ${response.status}.`,
+          : response.status === 404
+            ? 'The server rejected the secret (404).'
+            : `Unexpected response: ${response.status}.`,
       );
     } catch {
       setStatus('The request failed before reaching the server.');

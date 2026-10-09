@@ -362,8 +362,15 @@ export type FormGeneralSettings = {
   fromName?: string;
   confirmationSubject: string;
   confirmationMessage?: string;
+  mailProvider?: "mailjet" | "smtp";
   mailjetApiKey?: string;
   mailjetApiSecret?: string;
+  smtpHost?: string;
+  smtpSecurity?: "starttls" | "ssl" | "none";
+  smtpPort?: number;
+  smtpUser?: string;
+  smtpPassword?: string;
+  mailTest?: string;
   mailLogo?: {
     asset?: SanityImageAssetReference;
     media?: unknown;
@@ -1251,7 +1258,7 @@ export type FORM_QUERY_RESULT = {
 
 // Source: ../app/src/sanity/queries.ts
 // Variable: FORM_SETTINGS_QUERY
-// Query: *[_type == "formGeneralSettings"][0]{    adminEmail,    fromEmail,    fromName,    mailLogo,    primaryColor,    textColor,    mailjetApiKey,    mailjetApiSecret,    confirmationSubject,    confirmationMessage,    recaptchaEnabled,    recaptchaSecretKey  }
+// Query: *[_type == "formGeneralSettings"][0]{    adminEmail,    fromEmail,    fromName,    mailLogo,    primaryColor,    textColor,    mailProvider,    mailjetApiKey,    mailjetApiSecret,    smtpHost,    smtpPort,    smtpSecurity,    smtpUser,    smtpPassword,    confirmationSubject,    confirmationMessage,    recaptchaEnabled,    recaptchaSecretKey  }
 export type FORM_SETTINGS_QUERY_RESULT = {
   adminEmail: string;
   fromEmail: string | null;
@@ -1265,8 +1272,14 @@ export type FORM_SETTINGS_QUERY_RESULT = {
   } | null;
   primaryColor: string | null;
   textColor: string | null;
+  mailProvider: "mailjet" | "smtp" | null;
   mailjetApiKey: string | null;
   mailjetApiSecret: string | null;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpSecurity: "none" | "ssl" | "starttls" | null;
+  smtpUser: string | null;
+  smtpPassword: string | null;
   confirmationSubject: string;
   confirmationMessage: string | null;
   recaptchaEnabled: boolean | null;
@@ -1283,6 +1296,6 @@ declare module "@sanity/client" {
     '\n  *[_id == "siteInformation"][0]{\n    name,\n    description,\n    language,\n    phone,\n    email,\n    address,\n    addressCountry,\n    badges,\n    // Only the URLs: they become sameAs in the structured data.\n    "socialLinks": socialLinks[].url,\n    "logoUrl": logo.asset->url\n  }\n': SITE_INFORMATION_QUERY_RESULT;
     '\n  *[_id == "footer"][0]{\n    linkGroups[]{\n      title,\n      links[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n    },\n    copyright\n  }\n': FOOTER_QUERY_RESULT;
     '\n  *[_id == $formId && _type == "form"][0]{\n    _id,\n    title,\n    mailRecipients,\n    mailSubject,\n    mailMessage,\n    sendCopyToSubmitter,\n    copySubject,\n    copyMessage,\n    "fields": select(\n      mode == "steps" => steps[].fields[]{label, name, type, isRequired},\n      fields[]{label, name, type, isRequired}\n    )\n  }\n': FORM_QUERY_RESULT;
-    '\n  *[_type == "formGeneralSettings"][0]{\n    adminEmail,\n    fromEmail,\n    fromName,\n    mailLogo,\n    primaryColor,\n    textColor,\n    mailjetApiKey,\n    mailjetApiSecret,\n    confirmationSubject,\n    confirmationMessage,\n    recaptchaEnabled,\n    recaptchaSecretKey\n  }\n': FORM_SETTINGS_QUERY_RESULT;
+    '\n  *[_type == "formGeneralSettings"][0]{\n    adminEmail,\n    fromEmail,\n    fromName,\n    mailLogo,\n    primaryColor,\n    textColor,\n    mailProvider,\n    mailjetApiKey,\n    mailjetApiSecret,\n    smtpHost,\n    smtpPort,\n    smtpSecurity,\n    smtpUser,\n    smtpPassword,\n    confirmationSubject,\n    confirmationMessage,\n    recaptchaEnabled,\n    recaptchaSecretKey\n  }\n': FORM_SETTINGS_QUERY_RESULT;
   }
 }

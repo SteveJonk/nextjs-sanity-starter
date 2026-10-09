@@ -30,11 +30,13 @@ jobs:
     # Set them under Settings > Secrets and variables > Actions > Variables.
     # None of them is a secret: the project id ships in the studio bundle.
     # DATASET and TITLE may be left unset — the studio config defaults them to
-    # "production" and "Studio".
+    # "production" and "Studio". SITE_URL is optional too: only the "Send test
+    # mail" panel uses it, and the editor can type the address there instead.
     env:
       SANITY_STUDIO_PROJECT_ID: ${{ vars.SANITY_STUDIO_PROJECT_ID }}
       SANITY_STUDIO_DATASET: ${{ vars.SANITY_STUDIO_DATASET }}
       SANITY_STUDIO_TITLE: ${{ vars.SANITY_STUDIO_TITLE }}
+      SANITY_STUDIO_SITE_URL: ${{ vars.SANITY_STUDIO_SITE_URL }}
 
     steps:
       - name: Checkout

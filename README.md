@@ -303,8 +303,9 @@ items at that page. Run in that order, or let `npm run seed` do it for you.
    mail. `npm run check:form` asserts that the query and the renderer agree,
    because if they drift the form quietly stops recording answers.
 3. Answers are rendered into an HTML + plain-text mail (`src/lib/form-mail.ts`)
-   and sent through Mailjet. Swapping providers means rewriting one function,
-   `sendViaMailjet`; nothing else is provider-specific.
+   and sent through Mailjet or the client's own SMTP server (Form settings →
+   Mail provider). `src/lib/mail.ts` is the only provider-specific file:
+   `resolveMailSettings` picks the provider and credentials, `sendMail` sends.
 
 ### Field types and layout
 
@@ -326,10 +327,23 @@ and falls back to Form settings, which is convenient locally and wrong in
 production:
 
 ```bash
+MAIL_PROVIDER=          # mailjet | smtp — overrides Form settings
 MAILJET_API_KEY=        MAILJET_API_SECRET=
-MAILJET_FROM_EMAIL=     CONTACT_ADMIN_EMAIL=
+SMTP_HOST=              SMTP_PORT=          SMTP_SECURITY=   # starttls | ssl | none
+SMTP_USER=              SMTP_PASSWORD=
+MAIL_FROM_EMAIL=        CONTACT_ADMIN_EMAIL=
+MAIL_TEST_SECRET=       # guards /api/test-mail
 RECAPTCHA_SECRET_KEY=   # only when reCAPTCHA is switched on
 ```
+
+**Send test mail.** Form settings → Mail has a panel that sends one mail with
+the *published* settings through `POST /api/test-mail`, and shows the
+provider's error verbatim when it fails ("Invalid login", "Sender not
+validated", …). The route refuses everything unless `MAIL_TEST_SECRET` is set
+on the app — otherwise it would be an open relay — and the editor pastes that
+secret into the panel once; it is kept in the browser's localStorage, never in
+the dataset or the studio bundle. The panel posts to `SANITY_STUDIO_SITE_URL`
+(studio `.env`), or to an address the editor types in the panel.
 
 reCAPTCHA is off by default, and while it is off **no Google script is loaded**
 — same stance as the analytics tags. Switch it on in Form settings, put the
@@ -511,7 +525,7 @@ layer. Set none of them and the image builds without Sentry.
 ```
 app/
   src/app/            routes: / , /[slug] , not-found, sitemap, robots,
-                      api/submit-form, globals.css (the theme)
+                      api/submit-form, api/test-mail, globals.css (the theme)
   src/components/
     blocks/           one component per page-builder block
     layout/           header, footer
@@ -550,6 +564,7 @@ Configure it once, under **Settings → Secrets and variables → Actions**:
 | Variables      | `SANITY_STUDIO_PROJECT_ID` | yes      | Same project id as `studio/.env`                                   |
 | Variables      | `SANITY_STUDIO_DATASET`    | optional | Defaults to `production`                                           |
 | Variables      | `SANITY_STUDIO_TITLE`      | optional | Defaults to `Studio`                                               |
+| Variables      | `SANITY_STUDIO_SITE_URL`   | optional | Public site address, for "Send test mail" in Form settings          |
 | Variables      | `SANITY_STUDIO_HOSTNAME`   | optional | Which `*.sanity.studio` to deploy to; unset reuses the existing one |
 
 None of the `SANITY_STUDIO_*` values is a secret — they ship inside the studio

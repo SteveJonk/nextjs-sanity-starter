@@ -1,17 +1,17 @@
 import {CogIcon} from '@sanity/icons/Cog'
 import {defineField, defineType} from 'sanity'
+import {MailTest} from '../tools/MailTest'
 
 /**
  * Mail and spam settings shared by every `form`. A singleton.
  *
- * Sending goes through Mailjet's HTTP API — see the app's
- * `src/app/api/submit-form/route.ts`. Swapping providers means changing that
- * one function; nothing else here is Mailjet-specific.
+ * Sending goes through Mailjet's HTTP API or the client's own SMTP server,
+ * picked by `mailProvider` — see the app's `src/lib/mail.ts`.
  *
- * The API credentials below are a fallback for local work only. A Sanity
- * dataset is readable by anyone who knows the project id, so in production
- * these belong in the app environment (MAILJET_API_KEY / MAILJET_API_SECRET),
- * which wins over whatever is stored here.
+ * The credentials below are a fallback for local work only. A Sanity dataset
+ * is readable by anyone who knows the project id, so in production these
+ * belong in the app environment (MAILJET_API_KEY / MAILJET_API_SECRET,
+ * SMTP_USER / SMTP_PASSWORD), which wins over whatever is stored here.
  */
 export const formGeneralSettingsType = defineType({
   name: 'formGeneralSettings',
@@ -66,11 +66,27 @@ export const formGeneralSettingsType = defineType({
       initialValue: 'A new message came in through the website.',
     }),
     defineField({
+      name: 'mailProvider',
+      title: 'Mail provider',
+      type: 'string',
+      group: 'mail',
+      description: 'MAIL_PROVIDER in the app environment overrides this.',
+      options: {
+        list: [
+          {title: 'Mailjet', value: 'mailjet'},
+          {title: 'SMTP (own mail server)', value: 'smtp'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'mailjet',
+    }),
+    defineField({
       name: 'mailjetApiKey',
       title: 'Mailjet API key',
       type: 'string',
       group: 'mail',
       description: 'Fallback only — prefer MAILJET_API_KEY in the app environment.',
+      hidden: ({document}) => (document?.mailProvider ?? 'mailjet') !== 'mailjet',
     }),
     defineField({
       name: 'mailjetApiSecret',
@@ -78,6 +94,84 @@ export const formGeneralSettingsType = defineType({
       type: 'string',
       group: 'mail',
       description: 'Fallback only — prefer MAILJET_API_SECRET in the app environment.',
+      hidden: ({document}) => (document?.mailProvider ?? 'mailjet') !== 'mailjet',
+    }),
+    defineField({
+      name: 'smtpHost',
+      title: 'SMTP server',
+      type: 'string',
+      group: 'mail',
+      description: 'E.g. smtp.office365.com or mail.example.com. SMTP_HOST overrides this.',
+      hidden: ({document}) => document?.mailProvider !== 'smtp',
+      validation: (rule) =>
+        rule.custom((field, context) =>
+          context.document?.mailProvider === 'smtp' && !field
+            ? 'SMTP server is required when SMTP is the mail provider'
+            : true,
+        ),
+    }),
+    defineField({
+      name: 'smtpSecurity',
+      title: 'Encryption',
+      type: 'string',
+      group: 'mail',
+      description: 'Ask the mail host which one; STARTTLS on port 587 is the most common.',
+      options: {
+        list: [
+          {title: 'STARTTLS (usually port 587)', value: 'starttls'},
+          {title: 'SSL/TLS (usually port 465)', value: 'ssl'},
+          {title: 'None (port 25, not recommended)', value: 'none'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'starttls',
+      hidden: ({document}) => document?.mailProvider !== 'smtp',
+    }),
+    defineField({
+      name: 'smtpPort',
+      title: 'Port',
+      type: 'number',
+      group: 'mail',
+      description: 'Leave empty for the usual port of the chosen encryption.',
+      hidden: ({document}) => document?.mailProvider !== 'smtp',
+      validation: (rule) => rule.integer().min(1).max(65535),
+    }),
+    defineField({
+      name: 'smtpUser',
+      title: 'SMTP username',
+      type: 'string',
+      group: 'mail',
+      description:
+        'Usually the full e-mail address. Leave empty if the server needs no login. SMTP_USER overrides this.',
+      hidden: ({document}) => document?.mailProvider !== 'smtp',
+    }),
+    defineField({
+      name: 'smtpPassword',
+      title: 'SMTP password',
+      type: 'string',
+      group: 'mail',
+      description:
+        'Fallback only — prefer SMTP_PASSWORD in the app environment. Anything stored here is readable by anyone with the project id.',
+      hidden: ({document}) => document?.mailProvider !== 'smtp',
+      // A warning, not an error: it must stay possible for local work, but an
+      // editor filling it in should see the risk before publishing.
+      validation: (rule) =>
+        rule
+          .custom((field) =>
+            field
+              ? 'Not safe: this password is readable by anyone who knows the project id. Put it in SMTP_PASSWORD on the hosting (Netlify) instead and leave this empty.'
+              : true,
+          )
+          .warning(),
+    }),
+    defineField({
+      name: 'mailTest',
+      title: 'Test mail',
+      type: 'string',
+      group: 'mail',
+      // Not data: a panel with the "Send test mail" button. Nothing is ever
+      // written to this field.
+      components: {field: MailTest},
     }),
     defineField({
       // Not called `logo`: that field name also exists on siteInformation, and

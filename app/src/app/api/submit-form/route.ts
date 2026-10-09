@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { renderFormMail } from '@/lib/form-mail';
-import { SITE_DEFAULTS } from '@/lib/site';
+import { resolveMailSettings, sendMail } from '@/lib/mail';
 import { client } from '@/sanity/client';
 import { imageSrc } from '@/sanity/image';
 import { FORM_QUERY, FORM_SETTINGS_QUERY } from '@/sanity/queries';
@@ -36,58 +36,6 @@ function splitEmails(value?: string | null) {
     .split(/[,;]/)
     .map((email) => email.trim())
     .filter(Boolean);
-}
-
-/**
- * Sends via Mailjet's HTTP API (v3.1). Throws on a non-2xx response.
- *
- * This is the only provider-specific function in the route: swapping Mailjet
- * for Postmark, Resend or SMTP means rewriting this one and nothing else.
- */
-async function sendViaMailjet(
-  { apiKey, apiSecret }: { apiKey: string; apiSecret: string },
-  message: {
-    fromEmail: string;
-    fromName: string;
-    to: string[];
-    replyTo?: string;
-    subject: string;
-    html: string;
-    text: string;
-    attachments: { filename: string; content: Buffer }[];
-  },
-) {
-  const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
-
-  const response = await fetch('https://api.mailjet.com/v3.1/send', {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      Messages: [
-        {
-          From: { Email: message.fromEmail, Name: message.fromName },
-          To: message.to.map((email) => ({ Email: email })),
-          ...(message.replyTo ? { ReplyTo: { Email: message.replyTo } } : {}),
-          Subject: message.subject,
-          HTMLPart: message.html,
-          TextPart: message.text,
-          Attachments: message.attachments.map((attachment) => ({
-            ContentType: 'application/octet-stream',
-            Filename: attachment.filename,
-            Base64Content: attachment.content.toString('base64'),
-          })),
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => '');
-    throw new Error(`Mailjet responded ${response.status}: ${body}`);
-  }
 }
 
 export async function POST(request: Request) {
@@ -171,20 +119,14 @@ export async function POST(request: Request) {
 
   // Env wins over the studio settings: a dataset is readable by anyone with the
   // project id, so credentials belong in the environment.
-  const mailjetApiKey = process.env.MAILJET_API_KEY || settings?.mailjetApiKey;
-  const mailjetApiSecret = process.env.MAILJET_API_SECRET || settings?.mailjetApiSecret;
-  const adminEmail = process.env.CONTACT_ADMIN_EMAIL || settings?.adminEmail;
-  // Mailjet only accepts a sender it has validated; fall back to the recipient,
-  // which is the one address known to belong to this account.
-  const fromEmail = process.env.MAILJET_FROM_EMAIL || settings?.fromEmail || adminEmail;
-  const fromName = settings?.fromName || SITE_DEFAULTS.name;
+  const { provider, transport, adminEmail, fromEmail, fromName } = resolveMailSettings(settings);
 
   // Per-form recipients win over the shared admin address; both are valid.
   const recipients = splitEmails(form.mailRecipients);
   if (recipients.length === 0 && adminEmail) recipients.push(adminEmail);
 
-  if (recipients.length === 0 || !fromEmail || !mailjetApiKey || !mailjetApiSecret) {
-    console.error('submit-form: missing mail settings (env or formGeneralSettings)');
+  if (recipients.length === 0 || !fromEmail || !transport) {
+    console.error(`submit-form: missing mail settings for ${provider} (env or formGeneralSettings)`);
     return fail('This form is not configured yet. Please contact us directly.', 500);
   }
 
@@ -213,10 +155,8 @@ export async function POST(request: Request) {
   });
   const replyTo = submitterEmail || answers.find(({ label }) => /mail/i.test(label))?.value;
 
-  const credentials = { apiKey: mailjetApiKey, apiSecret: mailjetApiSecret };
-
   try {
-    await sendViaMailjet(credentials, {
+    await sendMail(transport, {
       fromEmail,
       fromName,
       to: recipients,
@@ -235,7 +175,7 @@ export async function POST(request: Request) {
   // a failure here is logged, not reported back as a failed submission.
   if (form.sendCopyToSubmitter && submitterEmail) {
     try {
-      await sendViaMailjet(credentials, {
+      await sendMail(transport, {
         fromEmail,
         fromName,
         to: [submitterEmail],

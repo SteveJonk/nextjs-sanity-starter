@@ -43,7 +43,7 @@ export type SanityImageAssetReference = {
 };
 
 export type ObjectImage = {
-  asset?: SanityImageAssetReference;
+  asset: SanityImageAssetReference;
   media?: unknown; // Unable to locate the referenced type "object.image.media" in schema
   hotspot?: SanityImageHotspot;
   crop?: SanityImageCrop;
@@ -52,7 +52,7 @@ export type ObjectImage = {
 };
 
 export type ItemsObjectImage = {
-  asset?: SanityImageAssetReference;
+  asset: SanityImageAssetReference;
   media?: unknown; // Unable to locate the referenced type "items.object.image.media" in schema
   hotspot?: SanityImageHotspot;
   crop?: SanityImageCrop;
@@ -79,7 +79,7 @@ export type ContactForm = {
 export type CtaBand = {
   _type: "ctaBand";
   image: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -144,7 +144,7 @@ export type Benefits = {
   title: string;
   lead: string;
   image: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -163,7 +163,7 @@ export type Benefits = {
 export type PageHero = {
   _type: "pageHero";
   image: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -186,7 +186,7 @@ export type MediaText = {
   paragraphs: Array<string>;
   cta?: Cta;
   image: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -214,7 +214,7 @@ export type Services = {
 export type Intro = {
   _type: "intro";
   image: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -238,7 +238,7 @@ export type Intro = {
 export type Hero = {
   _type: "hero";
   slides: Array<{
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -343,7 +343,7 @@ export type Seo = {
   title?: string;
   description?: string;
   ogImage?: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -373,7 +373,7 @@ export type FormGeneralSettings = {
   smtpPassword?: string;
   mailTest?: string;
   mailLogo?: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -463,7 +463,7 @@ export type SiteInformation = {
   name: string;
   description?: string;
   logo?: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;
@@ -725,7 +725,7 @@ export type PAGE_QUERY_RESULT = {
         title: string;
         lead: string;
         image: {
-          asset?: SanityImageAssetReference;
+          asset: SanityImageAssetReference;
           media?: unknown;
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
@@ -864,7 +864,7 @@ export type PAGE_QUERY_RESULT = {
         _key: string;
         _type: "ctaBand";
         image: {
-          asset?: SanityImageAssetReference;
+          asset: SanityImageAssetReference;
           media?: unknown;
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
@@ -941,7 +941,7 @@ export type PAGE_QUERY_RESULT = {
         _key: string;
         _type: "hero";
         slides: Array<{
-          asset?: SanityImageAssetReference;
+          asset: SanityImageAssetReference;
           media?: unknown;
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
@@ -981,7 +981,7 @@ export type PAGE_QUERY_RESULT = {
         _key: string;
         _type: "intro";
         image: {
-          asset?: SanityImageAssetReference;
+          asset: SanityImageAssetReference;
           media?: unknown;
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
@@ -1030,7 +1030,7 @@ export type PAGE_QUERY_RESULT = {
           href?: string;
         } | null;
         image: {
-          asset?: SanityImageAssetReference;
+          asset: SanityImageAssetReference;
           media?: unknown;
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
@@ -1047,7 +1047,7 @@ export type PAGE_QUERY_RESULT = {
         _key: string;
         _type: "pageHero";
         image: {
-          asset?: SanityImageAssetReference;
+          asset: SanityImageAssetReference;
           media?: unknown;
           hotspot?: SanityImageHotspot;
           crop?: SanityImageCrop;
@@ -1312,7 +1312,7 @@ export type FORM_SETTINGS_QUERY_RESULT = {
   fromEmail: string | null;
   fromName: string | null;
   mailLogo: {
-    asset?: SanityImageAssetReference;
+    asset: SanityImageAssetReference;
     media?: unknown;
     hotspot?: SanityImageHotspot;
     crop?: SanityImageCrop;

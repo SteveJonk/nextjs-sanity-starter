@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { renderFormMail } from '@/lib/form-mail';
-import { resolveMailSettings, sendMail } from '@/lib/mail';
+import { missingMailMessage, resolveMailSettings, sendMail } from '@/lib/mail';
 import { client } from '@/sanity/client';
 import { imageSrc } from '@/sanity/image';
 import { FORM_QUERY, FORM_SETTINGS_QUERY } from '@/sanity/queries';
@@ -119,15 +119,17 @@ export async function POST(request: Request) {
 
   // Env wins over the studio settings: a dataset is readable by anyone with the
   // project id, so credentials belong in the environment.
-  const { provider, transport, adminEmail, fromEmail, fromName } = resolveMailSettings(settings);
+  const { provider, transport, adminEmail, fromEmail, fromName, missing } = resolveMailSettings(settings);
 
   // Per-form recipients win over the shared admin address; both are valid.
   const recipients = splitEmails(form.mailRecipients);
   if (recipients.length === 0 && adminEmail) recipients.push(adminEmail);
+  if (recipients.length === 0) missing.push('CONTACT_ADMIN_EMAIL (or recipients on the form)');
 
-  if (recipients.length === 0 || !fromEmail || !transport) {
-    console.error(`submit-form: missing mail settings for ${provider} (env or formGeneralSettings)`);
-    return fail('This form is not configured yet. Please contact us directly.', 500);
+  if (missing.length || !fromEmail || !transport) {
+    const message = missingMailMessage(provider, missing);
+    console.error(`submit-form: ${message}`);
+    return fail(message, 500);
   }
 
   // Logo and colours come from Form settings, so the template itself stays
@@ -167,8 +169,11 @@ export async function POST(request: Request) {
       attachments,
     });
   } catch (error) {
-    console.error('submit-form: sending failed', error);
-    return fail('Sending failed. Please try again later.', 502);
+    // The server's own words ("Invalid login: 535 …", "Connection timeout")
+    // say what to fix; they carry no credentials.
+    const reason = error instanceof Error ? error.message : String(error);
+    console.error(`submit-form: sending via ${provider} failed: ${reason}`);
+    return fail(`Sending via ${provider} failed: ${reason}`, 502);
   }
 
   // The sender's copy is a courtesy: the submission already succeeded above, so

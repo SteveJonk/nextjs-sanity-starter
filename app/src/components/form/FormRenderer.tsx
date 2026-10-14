@@ -193,6 +193,12 @@ export function FormRenderer({
     try {
       const response = await fetch('/api/submit-form', { method: 'POST', body });
       const result = (await response.json()) as { success?: boolean; message?: string };
+      // 4xx messages are for the visitor ("Name is required"); 5xx ones name
+      // server config and stay in the response and logs for whoever debugs it.
+      if (response.status >= 500) {
+        console.error(result.message);
+        throw new Error('Sending failed. Please try again later.');
+      }
       if (!response.ok || !result.success) {
         throw new Error(result.message || 'Sending failed.');
       }

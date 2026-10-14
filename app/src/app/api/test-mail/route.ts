@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { renderFormMail } from '@/lib/form-mail';
-import { resolveMailSettings, sendMail } from '@/lib/mail';
+import { missingMailMessage, resolveMailSettings, sendMail } from '@/lib/mail';
 import { matchesSecret } from '@/lib/secret';
 import { client } from '@/sanity/client';
 import { imageSrc } from '@/sanity/image';
@@ -47,14 +47,14 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => ({}))) as { to?: unknown };
   const settings = await client.fetch(FORM_SETTINGS_QUERY, {}, { cache: 'no-store' });
-  const { provider, transport, adminEmail, fromEmail, fromName } = resolveMailSettings(settings);
+  const { provider, transport, adminEmail, fromEmail, fromName, missing } = resolveMailSettings(settings);
 
   const to = typeof body.to === 'string' && body.to.trim() ? body.to.trim() : adminEmail;
   if (!to || !/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(to)) {
     return reply({ ok: false, message: 'No valid recipient address.' }, 400);
   }
-  if (!fromEmail || !transport) {
-    return reply({ ok: false, message: `The ${provider} settings are incomplete.` }, 400);
+  if (missing.length || !fromEmail || !transport) {
+    return reply({ ok: false, message: missingMailMessage(provider, missing) }, 400);
   }
 
   const subject = `Test mail (${provider})`;

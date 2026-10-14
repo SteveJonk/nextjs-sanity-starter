@@ -116,26 +116,42 @@ export function sendMail(transport: MailTransport, message: MailMessage) {
     : sendViaMailjet(transport, message);
 }
 
-/** Provider, credentials and sender from env + Form settings. `transport` is null when incomplete. */
+/**
+ * Provider, credentials and sender from env + Form settings. `transport` is
+ * null when incomplete, and `missing` names what to set (by env var; each also
+ * has a field in Form settings).
+ */
 export function resolveMailSettings(settings: FORM_SETTINGS_QUERY_RESULT | null) {
   const provider = process.env.MAIL_PROVIDER || settings?.mailProvider || 'mailjet';
+  const missing: string[] = [];
   let transport: MailTransport | null = null;
   if (provider === 'smtp') {
     const host = process.env.SMTP_HOST || settings?.smtpHost;
     const security = (process.env.SMTP_SECURITY || settings?.smtpSecurity || 'starttls') as SmtpSecurity;
-    if (host && security in SMTP_PORTS) {
+    const user = process.env.SMTP_USER || settings?.smtpUser || undefined;
+    const password = process.env.SMTP_PASSWORD || settings?.smtpPassword || undefined;
+    if (!host) missing.push('SMTP_HOST');
+    if (!(security in SMTP_PORTS)) missing.push('SMTP_SECURITY (ssl, starttls or none)');
+    // Encrypted servers always want a login; 'none' is for local relays/sinks.
+    if (security !== 'none') {
+      if (!user) missing.push('SMTP_USER');
+      if (!password) missing.push('SMTP_PASSWORD');
+    }
+    if (host && missing.length === 0) {
       transport = {
         provider,
         host,
         port: Number(process.env.SMTP_PORT) || settings?.smtpPort || undefined,
         security,
-        user: process.env.SMTP_USER || settings?.smtpUser || undefined,
-        password: process.env.SMTP_PASSWORD || settings?.smtpPassword || undefined,
+        user,
+        password,
       };
     }
   } else {
     const apiKey = process.env.MAILJET_API_KEY || settings?.mailjetApiKey;
     const apiSecret = process.env.MAILJET_API_SECRET || settings?.mailjetApiSecret;
+    if (!apiKey) missing.push('MAILJET_API_KEY');
+    if (!apiSecret) missing.push('MAILJET_API_SECRET');
     if (apiKey && apiSecret) transport = { provider: 'mailjet', apiKey, apiSecret };
   }
 
@@ -148,6 +164,12 @@ export function resolveMailSettings(settings: FORM_SETTINGS_QUERY_RESULT | null)
     settings?.fromEmail ||
     adminEmail;
   const fromName = settings?.fromName || SITE_DEFAULTS.name;
+  if (!fromEmail) missing.push('MAIL_FROM_EMAIL');
 
-  return { provider, transport, adminEmail, fromEmail, fromName };
+  return { provider, transport, adminEmail, fromEmail, fromName, missing };
+}
+
+/** "Missing mail settings: …" for the response and the logs. */
+export function missingMailMessage(provider: string, missing: string[]) {
+  return `Mail (${provider}) is not configured. Missing: ${missing.join(', ')}. Set these in the hosting environment or in the studio under Form settings.`;
 }

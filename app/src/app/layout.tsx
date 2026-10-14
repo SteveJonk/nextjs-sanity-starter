@@ -122,7 +122,12 @@ export default async function RootLayout({
         <TrackingScriptsBody />
         {/* The organisation and the site belong on every page. */}
         <JsonLd data={siteJsonLd(site)} />
-        <SiteHeader siteName={site.name} navLeft={navLeft} navRight={navRight} />
+        <SiteHeader
+          siteName={site.name}
+          menuLabel={site.interfaceText.menuLabel}
+          navLeft={navLeft}
+          navRight={navRight}
+        />
         {children}
         <SiteFooter site={site} linkGroups={linkGroups} copyright={footer?.copyright} />
       </body>

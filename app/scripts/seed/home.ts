@@ -69,6 +69,7 @@ async function buildHomeContent() {
       title: SERVICES_SECTION.title,
       lead: SERVICES_SECTION.lead,
       items: serviceItems,
+      cardLinkLabel: SERVICES_SECTION.cardLinkLabel,
       highlight: {
         badge: SERVICES_SECTION.highlight.badge,
         title: SERVICES_SECTION.highlight.title,

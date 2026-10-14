@@ -24,7 +24,20 @@ export const SITE_DEFAULTS = {
   addressCountry: 'NL',
   /** Memberships, certifications, awards. Empty hides the footer row. */
   badges: ['B CORP', 'ISO 27001'],
+  /** Fixed bits of copy in the header, footer and 404 page. */
+  interfaceText: {
+    menuLabel: 'Menu',
+    footerContactTitle: 'Contact',
+    notFoundMetaTitle: 'Page not found',
+    notFoundEyebrow: '404',
+    notFoundTitle: 'This page does not exist',
+    notFoundBody:
+      'The link has expired, moved, or never existed. Head back to the home page, or get in touch if you were looking for something specific.',
+    notFoundButtonLabel: 'Back to home',
+  },
 } as const;
+
+export type InterfaceText = Record<keyof typeof SITE_DEFAULTS.interfaceText, string>;
 
 /**
  * The site's public origin, without a trailing slash.
@@ -53,6 +66,7 @@ export type SiteInformation = {
   /** Profile URLs elsewhere. Empty unless an editor adds some. */
   socialLinks: string[];
   logoUrl: string | null;
+  interfaceText: InterfaceText;
 };
 
 /** What the CMS hands over: every field optional, any of them blank. */
@@ -67,6 +81,7 @@ export type SiteInformationDocument = {
   badges?: Array<string | null> | null;
   socialLinks?: Array<string | null> | null;
   logoUrl?: string | null;
+  interfaceText?: Partial<Record<keyof InterfaceText, string | null>> | null;
 } | null;
 
 function text(value: string | null | undefined, fallback: string): string {
@@ -100,7 +115,21 @@ export function resolveSiteInformation(doc: SiteInformationDocument): SiteInform
     badges: list(doc?.badges, SITE_DEFAULTS.badges),
     socialLinks: list(doc?.socialLinks),
     logoUrl: doc?.logoUrl?.trim() || null,
+    interfaceText: withDefaults(SITE_DEFAULTS.interfaceText, doc?.interfaceText),
   };
+}
+
+/** Each key of `doc`, or its default where the editor left it empty. */
+export function withDefaults<K extends string>(
+  defaults: Readonly<Record<K, string>>,
+  doc: Partial<Record<K, string | null>> | null | undefined,
+): Record<K, string> {
+  return Object.fromEntries(
+    Object.entries<string>(defaults).map(([key, fallback]) => [
+      key,
+      text(doc?.[key as K], fallback),
+    ]),
+  ) as Record<K, string>;
 }
 
 /** `+31 (0)20 123 4567` -> `tel:+31201234567`. */

@@ -5,7 +5,14 @@ import { useRef, useState, type FormEvent, type MouseEvent, type ReactNode } fro
 import { flushSync } from 'react-dom';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { cn } from '@/lib/cn';
-import { fillTokens, toFieldRows, toSteps, type FormDefinition } from '@/lib/form-fields';
+import {
+  FORM_TEXT_DEFAULTS,
+  fillTokens,
+  toFieldRows,
+  toSteps,
+  type FormDefinition,
+  type FormText,
+} from '@/lib/form-fields';
 import { FormField, type FormFieldVariant } from './fields';
 
 /** Public half of the reCAPTCHA settings — the secret stays server-side. */
@@ -16,6 +23,8 @@ export type FormRecaptcha = {
 
 export type FormRendererProps = {
   form: FormDefinition;
+  /** Shared copy from Form settings — button fallbacks, progress, errors. */
+  text?: FormText;
   /** Heading above the form. Hidden once the form has been sent. */
   title?: string;
   lead?: string;
@@ -115,6 +124,7 @@ function SuccessPanel({
  */
 export function FormRenderer({
   form,
+  text = FORM_TEXT_DEFAULTS,
   title,
   lead,
   footer,
@@ -182,7 +192,7 @@ export function FormRenderer({
     if (usesRecaptcha) {
       const token = recaptchaRef.current?.getValue();
       if (!token) {
-        setError('Please confirm you are not a robot.');
+        setError(text.recaptchaPrompt);
         return;
       }
       body.set('recaptchaToken', token);
@@ -197,10 +207,10 @@ export function FormRenderer({
       // server config and stay in the response and logs for whoever debugs it.
       if (response.status >= 500) {
         console.error(result.message);
-        throw new Error('Sending failed. Please try again later.');
+        throw new Error(text.sendFailed);
       }
       if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Sending failed.');
+        throw new Error(result.message || text.sendFailed);
       }
       if (form.redirect) {
         // Stay on 'sending' so the button keeps its disabled state until the
@@ -215,9 +225,7 @@ export function FormRenderer({
       recaptchaRef.current?.reset();
       setStatus('idle');
       setError(
-        submitError instanceof Error
-          ? submitError.message
-          : 'Sending failed. Please try again later.',
+        submitError instanceof Error ? submitError.message : text.sendFailed,
       );
     }
   }
@@ -244,7 +252,7 @@ export function FormRenderer({
             />
           </div>
           <span className='text-[0.74rem] font-semibold tracking-[0.11em] whitespace-nowrap text-subtle uppercase'>
-            Step {step + 1} of {total}
+            {fillTokens(text.stepCounter, { step: String(step + 1), total: String(total) })}
           </span>
         </div>
       ) : null}
@@ -313,11 +321,11 @@ export function FormRenderer({
 
         {isLastStep ? (
           <button type='submit' disabled={status === 'sending'} className={styles.button}>
-            {status === 'sending' ? 'Sending…' : (form.submitButtonText ?? 'Send')}
+            {status === 'sending' ? text.sendingText : (form.submitButtonText ?? text.submitButtonText)}
           </button>
         ) : (
           <button type='button' onClick={goNext} className={styles.button}>
-            {form.nextButtonText ?? 'Next'}
+            {form.nextButtonText ?? text.nextButtonText}
             <IconArrowRight />
           </button>
         )}
@@ -328,7 +336,7 @@ export function FormRenderer({
             onClick={() => setStep((current) => Math.max(current - 1, 0))}
             className='mt-3.5 flex w-full items-center justify-center gap-1.5 text-[0.85rem] font-medium text-subtle transition-colors duration-250 ease-brand hover:text-fg'
           >
-            ← {form.backButtonText ?? 'Back'}
+            ← {form.backButtonText ?? text.backButtonText}
           </button>
         ) : null}
 

@@ -68,7 +68,7 @@ export function SiteFooter({
           ))}
           <div>
             <h5 className='mb-5 text-eyebrow font-semibold tracking-[0.22em] text-subtle uppercase'>
-              Contact
+              {site.interfaceText.footerContactTitle}
             </h5>
             <ul className='list-none'>
               <li className='mb-[11px] text-[0.92rem] max-md:mb-0.5'>

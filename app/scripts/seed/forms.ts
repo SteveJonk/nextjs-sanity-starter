@@ -10,6 +10,7 @@
  * anything stored in the dataset.
  */
 import {CONTACT_FORM_FIELDS} from '../../src/lib/demo-content'
+import {FORM_TEXT_DEFAULTS} from '../../src/lib/form-fields'
 import {SITE_DEFAULTS} from '../../src/lib/site'
 import {client, key} from './shared'
 
@@ -26,6 +27,7 @@ async function upsertFormSettings() {
     primaryColor: '#0f172a',
     textColor: '#0f172a',
     recaptchaEnabled: false,
+    formText: {...FORM_TEXT_DEFAULTS},
   })
 
   console.log('✓ form settings singleton upserted')

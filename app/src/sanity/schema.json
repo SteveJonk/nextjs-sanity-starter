@@ -179,7 +179,7 @@
             "type": "inline",
             "name": "sanity.imageAsset.reference"
           },
-          "optional": true
+          "optional": false
         },
         "media": {
           "type": "objectAttribute",
@@ -234,7 +234,7 @@
             "type": "inline",
             "name": "sanity.imageAsset.reference"
           },
-          "optional": true
+          "optional": false
         },
         "media": {
           "type": "objectAttribute",
@@ -384,7 +384,7 @@
                   "type": "inline",
                   "name": "sanity.imageAsset.reference"
                 },
-                "optional": true
+                "optional": false
               },
               "media": {
                 "type": "objectAttribute",
@@ -767,7 +767,7 @@
                   "type": "inline",
                   "name": "sanity.imageAsset.reference"
                 },
-                "optional": true
+                "optional": false
               },
               "media": {
                 "type": "objectAttribute",
@@ -911,7 +911,7 @@
                   "type": "inline",
                   "name": "sanity.imageAsset.reference"
                 },
-                "optional": true
+                "optional": false
               },
               "media": {
                 "type": "objectAttribute",
@@ -1064,7 +1064,7 @@
                   "type": "inline",
                   "name": "sanity.imageAsset.reference"
                 },
-                "optional": true
+                "optional": false
               },
               "media": {
                 "type": "objectAttribute",
@@ -1197,6 +1197,13 @@
           },
           "optional": false
         },
+        "cardLinkLabel": {
+          "type": "objectAttribute",
+          "value": {
+            "type": "string"
+          },
+          "optional": true
+        },
         "highlight": {
           "type": "objectAttribute",
           "value": {
@@ -1232,7 +1239,7 @@
                   "type": "inline",
                   "name": "sanity.imageAsset.reference"
                 },
-                "optional": true
+                "optional": false
               },
               "media": {
                 "type": "objectAttribute",
@@ -1394,7 +1401,7 @@
                     "type": "inline",
                     "name": "sanity.imageAsset.reference"
                   },
-                  "optional": true
+                  "optional": false
                 },
                 "media": {
                   "type": "objectAttribute",
@@ -2005,7 +2012,7 @@
                   "type": "inline",
                   "name": "sanity.imageAsset.reference"
                 },
-                "optional": true
+                "optional": false
               },
               "media": {
                 "type": "objectAttribute",
@@ -2219,7 +2226,7 @@
                 "type": "inline",
                 "name": "sanity.imageAsset.reference"
               },
-              "optional": true
+              "optional": false
             },
             "media": {
               "type": "objectAttribute",
@@ -2287,6 +2294,92 @@
         "type": "objectAttribute",
         "value": {
           "type": "string"
+        },
+        "optional": true
+      },
+      "formText": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "object",
+          "attributes": {
+            "submitButtonText": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "nextButtonText": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "backButtonText": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "sendingText": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "stepCounter": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "recaptchaPrompt": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "recaptchaFailed": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "sendFailed": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "requiredField": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "fileTooLarge": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "emptyForm": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            }
+          }
         },
         "optional": true
       }
@@ -2681,7 +2774,7 @@
                 "type": "inline",
                 "name": "sanity.imageAsset.reference"
               },
-              "optional": true
+              "optional": false
             },
             "media": {
               "type": "objectAttribute",
@@ -2805,6 +2898,64 @@
           "type": "array",
           "of": {
             "type": "string"
+          }
+        },
+        "optional": true
+      },
+      "interfaceText": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "object",
+          "attributes": {
+            "menuLabel": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "footerContactTitle": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "notFoundMetaTitle": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "notFoundEyebrow": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "notFoundTitle": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "notFoundBody": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            },
+            "notFoundButtonLabel": {
+              "type": "objectAttribute",
+              "value": {
+                "type": "string"
+              },
+              "optional": true
+            }
           }
         },
         "optional": true

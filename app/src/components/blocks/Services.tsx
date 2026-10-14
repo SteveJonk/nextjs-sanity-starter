@@ -7,6 +7,7 @@ import { RevealLink } from "@/components/ui/RevealLink";
 import { SectionHead } from "@/components/ui/SectionHead";
 import { Wrap } from "@/components/ui/Wrap";
 import { cn } from "@/lib/cn";
+import { fillTokens } from "@/lib/form-fields";
 import { SERVICES, SERVICES_SECTION } from "@/lib/demo-content";
 
 export type ServiceImage = {
@@ -39,6 +40,8 @@ export type ServicesProps = {
   title?: string;
   lead?: string;
   items?: ServiceItem[];
+  /** Under each card; `{{service}}` becomes the card label. */
+  cardLinkLabel?: string;
   highlight?: ServicesHighlight;
 };
 
@@ -51,15 +54,18 @@ const DEFAULTS: Required<ServicesProps> = {
   title: SERVICES_SECTION.title,
   lead: SERVICES_SECTION.lead,
   items: DEFAULT_ITEMS,
+  cardLinkLabel: SERVICES_SECTION.cardLinkLabel,
   highlight: SERVICES_SECTION.highlight,
 };
 
 function ServiceCardItem({
   service,
   index,
+  linkLabel,
 }: {
   service: ServiceItem;
   index: number;
+  linkLabel: string;
 }) {
   return (
     <RevealLink
@@ -95,7 +101,9 @@ function ServiceCardItem({
       <p className="mb-4 text-[0.93rem] leading-[1.62] text-muted">
         {service.description}
       </p>
-      <ArrowLinkLabel>More about {service.label.toLowerCase()}</ArrowLinkLabel>
+      <ArrowLinkLabel>
+        {fillTokens(linkLabel, { service: service.label.toLowerCase() })}
+      </ArrowLinkLabel>
     </RevealLink>
   );
 }
@@ -104,6 +112,7 @@ export function Services({
   title = DEFAULTS.title,
   lead = DEFAULTS.lead,
   items = DEFAULTS.items,
+  cardLinkLabel = DEFAULTS.cardLinkLabel,
   highlight = DEFAULTS.highlight,
 }: ServicesProps = {}) {
   return (
@@ -122,6 +131,7 @@ export function Services({
               key={service.label}
               service={service}
               index={index}
+              linkLabel={cardLinkLabel}
             />
           ))}
         </div>

@@ -19,6 +19,7 @@ export const siteInformationType = defineType({
     {name: 'identity', title: 'Identity', default: true},
     {name: 'contact', title: 'Contact'},
     {name: 'elsewhere', title: 'Elsewhere'},
+    {name: 'interface', title: 'Interface text'},
   ],
   fields: [
     defineField({
@@ -104,6 +105,22 @@ export const siteInformationType = defineType({
       group: 'elsewhere',
       of: [defineArrayMember({type: 'string'})],
       description: 'Memberships, certifications, awards. Leave empty to hide the row.',
+    }),
+    defineField({
+      name: 'interfaceText',
+      title: 'Interface text',
+      type: 'object',
+      group: 'interface',
+      description: 'Fixed copy around the pages. An empty field falls back to the built-in text.',
+      fields: [
+        defineField({name: 'menuLabel', title: 'Mobile menu button (screen readers)', type: 'string'}),
+        defineField({name: 'footerContactTitle', title: 'Footer contact heading', type: 'string'}),
+        defineField({name: 'notFoundMetaTitle', title: '404 browser tab title', type: 'string'}),
+        defineField({name: 'notFoundEyebrow', title: '404 eyebrow', type: 'string'}),
+        defineField({name: 'notFoundTitle', title: '404 title', type: 'string'}),
+        defineField({name: 'notFoundBody', title: '404 text', type: 'text', rows: 3}),
+        defineField({name: 'notFoundButtonLabel', title: '404 button', type: 'string'}),
+      ],
     }),
   ],
   preview: {

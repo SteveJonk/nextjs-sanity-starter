@@ -27,6 +27,7 @@ export async function seedSiteInformation() {
     address: [...SITE_DEFAULTS.address],
     addressCountry: SITE_DEFAULTS.addressCountry,
     badges: [...SITE_DEFAULTS.badges],
+    interfaceText: {...SITE_DEFAULTS.interfaceText},
   })
 
   console.log('✓ siteInformation singleton upserted')

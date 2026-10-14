@@ -56,10 +56,12 @@ function DesktopNav({
 }
 
 function Burger({
+  label,
   open,
   stuck,
   onToggle,
 }: {
+  label: string;
   open: boolean;
   stuck: boolean;
   onToggle: () => void;
@@ -69,7 +71,7 @@ function Burger({
   return (
     <button
       type='button'
-      aria-label='Menu'
+      aria-label={label}
       aria-expanded={open}
       onClick={onToggle}
       className='relative z-[130] mr-[-8px] hidden size-11 max-md:block'
@@ -101,12 +103,14 @@ function Burger({
 
 type SiteHeaderProps = {
   siteName?: string;
+  menuLabel?: string;
   navLeft?: NavLink[] | null;
   navRight?: NavLink[] | null;
 };
 
 export function SiteHeader({
   siteName = SITE_DEFAULTS.name,
+  menuLabel = SITE_DEFAULTS.interfaceText.menuLabel,
   navLeft = [],
   navRight = [],
 }: SiteHeaderProps) {
@@ -137,7 +141,7 @@ export function SiteHeader({
           <LogoMark name={siteName} stuck={stuck} />
         </Link>
         <DesktopNav links={right} align='end' stuck={stuck} />
-        <Burger open={open} stuck={stuck} onToggle={toggle} />
+        <Burger label={menuLabel} open={open} stuck={stuck} onToggle={toggle} />
       </div>
 
       <nav

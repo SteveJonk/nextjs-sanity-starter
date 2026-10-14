@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fillTokens, resolveFormText } from '@/lib/form-fields';
 import { renderFormMail } from '@/lib/form-mail';
 import { missingMailMessage, resolveMailSettings, sendMail } from '@/lib/mail';
 import { client } from '@/sanity/client';
@@ -56,6 +57,8 @@ export async function POST(request: Request) {
     client.fetch(FORM_SETTINGS_QUERY, {}, { cache: 'no-store' }),
   ]);
   if (!form) return fail('Unknown form.', 404);
+  // Visitor-facing messages; the config and request errors stay in code.
+  const copy = resolveFormText(settings?.formText);
 
   // Spam gate before any real work. The secret belongs in the environment: a
   // Sanity dataset is world-readable, so the studio value is only a fallback.
@@ -67,7 +70,7 @@ export async function POST(request: Request) {
     }
     const token = String(body.get('recaptchaToken') ?? '');
     if (!token || !(await verifyRecaptcha(token, recaptchaSecret))) {
-      return fail('The reCAPTCHA check failed. Please try again.', 400);
+      return fail(copy.recaptchaFailed, 400);
     }
   }
 
@@ -88,7 +91,7 @@ export async function POST(request: Request) {
       );
       if (file) {
         if (file.size > MAX_ATTACHMENT_BYTES) {
-          return fail(`File "${file.name}" is larger than 5 MB.`, 413);
+          return fail(fillTokens(copy.fileTooLarge, { file: file.name }), 413);
         }
         attachments.push({
           filename: file.name,
@@ -96,7 +99,7 @@ export async function POST(request: Request) {
         });
         answers.push({ label, value: file.name });
       } else if (field.isRequired) {
-        return fail(`"${label}" is required.`, 400);
+        return fail(fillTokens(copy.requiredField, { label }), 400);
       }
       continue;
     }
@@ -108,14 +111,14 @@ export async function POST(request: Request) {
       .join(', ');
 
     if (!text) {
-      if (field.isRequired) return fail(`"${label}" is required.`, 400);
+      if (field.isRequired) return fail(fillTokens(copy.requiredField, { label }), 400);
       continue;
     }
     if (field.type === 'email' && !submitterEmail) submitterEmail = text;
     answers.push({ label, value: text });
   }
 
-  if (answers.length === 0) return fail('The form was empty.', 400);
+  if (answers.length === 0) return fail(copy.emptyForm, 400);
 
   // Env wins over the studio settings: a dataset is readable by anyone with the
   // project id, so credentials belong in the environment.

@@ -1,6 +1,7 @@
 import type { SanityImageSource } from '@sanity/image-url';
 import type { Metadata } from 'next';
 import { urlFor } from '@/sanity/image';
+import { getSiteInformation } from '@/sanity/site-information';
 
 export type SanitySeo = {
   title?: string | null;
@@ -37,9 +38,10 @@ type Options = {
   isHome?: boolean;
 };
 
-export function pageMetadata(page: SanityPage, options?: Options): Metadata {
+export async function pageMetadata(page: SanityPage, options?: Options): Promise<Metadata> {
   if (!page) {
-    return { title: 'Page not found', robots: { index: false } };
+    const { interfaceText } = await getSiteInformation();
+    return { title: interfaceText.notFoundMetaTitle, robots: { index: false } };
   }
 
   const seo = page.seo ?? {};

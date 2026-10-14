@@ -22,6 +22,7 @@ export const formGeneralSettingsType = defineType({
     {name: 'mail', title: 'Mail', default: true},
     {name: 'branding', title: 'Mail design'},
     {name: 'spam', title: 'Spam'},
+    {name: 'text', title: 'Interface text'},
   ],
   fields: [
     defineField({
@@ -236,6 +237,57 @@ export const formGeneralSettingsType = defineType({
             ? 'Secret key is required when reCAPTCHA is enabled'
             : true,
         ),
+    }),
+    defineField({
+      name: 'formText',
+      title: 'Interface text',
+      type: 'object',
+      group: 'text',
+      description:
+        'Copy shared by every form. Words in {{braces}} are filled in for you. An empty field falls back to the built-in text.',
+      fields: [
+        defineField({
+          name: 'submitButtonText',
+          title: 'Send button',
+          type: 'string',
+          description: 'Used when a form leaves its own button text empty.',
+        }),
+        defineField({
+          name: 'nextButtonText',
+          title: 'Next button',
+          type: 'string',
+          description: 'Used when a form leaves its own button text empty.',
+        }),
+        defineField({
+          name: 'backButtonText',
+          title: 'Back button',
+          type: 'string',
+          description: 'Used when a form leaves its own button text empty.',
+        }),
+        defineField({name: 'sendingText', title: 'Send button while sending', type: 'string'}),
+        defineField({
+          name: 'stepCounter',
+          title: 'Step counter',
+          type: 'string',
+          description: 'Multi-step forms. {{step}} is the current step, {{total}} the number of steps.',
+        }),
+        defineField({name: 'recaptchaPrompt', title: 'reCAPTCHA not ticked', type: 'string'}),
+        defineField({name: 'recaptchaFailed', title: 'reCAPTCHA check failed', type: 'string'}),
+        defineField({name: 'sendFailed', title: 'Sending failed', type: 'string'}),
+        defineField({
+          name: 'requiredField',
+          title: 'Required field missing',
+          type: 'string',
+          description: '{{label}} is the field label.',
+        }),
+        defineField({
+          name: 'fileTooLarge',
+          title: 'File too large',
+          type: 'string',
+          description: '{{file}} is the file name. The limit is 5 MB.',
+        }),
+        defineField({name: 'emptyForm', title: 'Form sent empty', type: 'string'}),
+      ],
     }),
   ],
   preview: {

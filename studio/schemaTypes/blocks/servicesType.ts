@@ -58,6 +58,13 @@ export const servicesType = defineType({
       validation: (rule) => rule.min(1).required(),
     }),
     defineField({
+      name: 'cardLinkLabel',
+      title: 'Card link text',
+      type: 'string',
+      description: '{{service}} is replaced by the card label, in lower case.',
+      initialValue: 'More about {{service}}',
+    }),
+    defineField({
       name: 'highlight',
       title: 'Highlight banner',
       description: 'Optional dark band under the cards. Leave the title empty to hide it.',

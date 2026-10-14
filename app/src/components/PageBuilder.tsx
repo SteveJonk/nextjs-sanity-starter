@@ -10,7 +10,7 @@ import { PageHero } from '@/components/blocks/PageHero';
 import { Services } from '@/components/blocks/Services';
 import { Steps } from '@/components/blocks/Steps';
 import type { ContactIconName } from '@/components/ui/ContactIcon';
-import { toFormDefinition } from '@/lib/form-fields';
+import { resolveFormText, toFormDefinition, type FormText } from '@/lib/form-fields';
 import { imageSrc, toImage, type SanityImage } from '@/sanity/image';
 import { resolveHref, type SanityLabeledLink, type SanityLink } from '@/lib/links';
 import type { Benefit } from '@/lib/demo-content';
@@ -113,6 +113,7 @@ function renderBlock(block: PageBlock, path?: string) {
           title={block.title as string | undefined}
           lead={block.lead as string | undefined}
           items={items}
+          cardLinkLabel={(block.cardLinkLabel as string | undefined) || undefined}
           highlight={
             highlight?.title
               ? {
@@ -274,6 +275,7 @@ function renderBlock(block: PageBlock, path?: string) {
           lead={block.lead as string | undefined}
           note={block.note as string | undefined}
           form={toFormDefinition(block.form)}
+          formText={resolveFormText(block.formText as Partial<FormText> | null | undefined)}
           // What a hidden `{{path}}` field is filled with, so the mail says
           // which page the form was sent from.
           context={path ? { path } : undefined}

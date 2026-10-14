@@ -83,7 +83,8 @@ export const PAGE_QUERY = defineQuery(`
         "recaptcha": *[_type == "formGeneralSettings"][0]{
           recaptchaEnabled,
           recaptchaSiteKey
-        }
+        },
+        "formText": *[_type == "formGeneralSettings"][0].formText
       },
       _type == "faqs" => {
         ...,
@@ -113,7 +114,8 @@ export const NAVIGATION_QUERY = defineQuery(`
 `);
 
 /**
- * The site's own details — name, contact, language, social profiles.
+ * The site's own details — name, contact, language, social profiles — plus the
+ * fixed copy in the header, footer and 404 page.
  *
  * Every field is optional in the studio; `resolveSiteInformation` in
  * `src/lib/site.ts` lays what comes back over the defaults, so an empty field
@@ -131,7 +133,8 @@ export const SITE_INFORMATION_QUERY = defineQuery(`
     badges,
     // Only the URLs: they become sameAs in the structured data.
     "socialLinks": socialLinks[].url,
-    "logoUrl": logo.asset->url
+    "logoUrl": logo.asset->url,
+    interfaceText
   }
 `);
 
@@ -190,6 +193,7 @@ export const FORM_SETTINGS_QUERY = defineQuery(`
     confirmationSubject,
     confirmationMessage,
     recaptchaEnabled,
-    recaptchaSecretKey
+    recaptchaSecretKey,
+    formText
   }
 `);

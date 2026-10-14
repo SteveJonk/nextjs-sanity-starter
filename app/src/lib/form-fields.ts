@@ -3,6 +3,35 @@
  * grouping logic can be checked by `npm run check:form`.
  */
 import { isInternalHref, resolveHref, type SanityLink } from '@/lib/links';
+import { withDefaults } from '@/lib/site';
+
+/**
+ * The fixed copy every form shares — buttons a form leaves blank, progress,
+ * errors. Editable under Form settings → Interface text; these are the
+ * fallbacks for an empty field, and what `npm run seed:forms` pushes.
+ * `{{token}}`s are filled in by `fillTokens`.
+ */
+export const FORM_TEXT_DEFAULTS = {
+  submitButtonText: 'Send',
+  nextButtonText: 'Next',
+  backButtonText: 'Back',
+  sendingText: 'Sending…',
+  stepCounter: 'Step {{step}} of {{total}}',
+  recaptchaPrompt: 'Please confirm you are not a robot.',
+  sendFailed: 'Sending failed. Please try again later.',
+  recaptchaFailed: 'The reCAPTCHA check failed. Please try again.',
+  requiredField: '"{{label}}" is required.',
+  fileTooLarge: 'File "{{file}}" is larger than 5 MB.',
+  emptyForm: 'The form was empty.',
+} as const;
+
+export type FormText = Record<keyof typeof FORM_TEXT_DEFAULTS, string>;
+
+export function resolveFormText(
+  doc: Partial<Record<keyof FormText, string | null>> | null | undefined,
+): FormText {
+  return withDefaults(FORM_TEXT_DEFAULTS, doc);
+}
 
 export type FormFieldType =
   | 'text'

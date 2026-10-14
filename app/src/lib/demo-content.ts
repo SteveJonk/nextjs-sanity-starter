@@ -94,6 +94,7 @@ export const SERVICES = [
 export const SERVICES_SECTION = {
   title: 'What we do',
   lead: 'Three things, done properly. If a project needs something outside this list we will tell you and point you somewhere better.',
+  cardLinkLabel: 'More about {{service}}',
   highlight: {
     badge: 'B CORP',
     title: 'Certified since 2021',

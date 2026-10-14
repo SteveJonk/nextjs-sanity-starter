@@ -207,6 +207,7 @@ export type Services = {
     link: Link;
     _key: string;
   }>;
+  cardLinkLabel?: string;
   highlight?: Highlight;
 };
 
@@ -383,6 +384,19 @@ export type FormGeneralSettings = {
   recaptchaEnabled?: boolean;
   recaptchaSiteKey?: string;
   recaptchaSecretKey?: string;
+  formText?: {
+    submitButtonText?: string;
+    nextButtonText?: string;
+    backButtonText?: string;
+    sendingText?: string;
+    stepCounter?: string;
+    recaptchaPrompt?: string;
+    recaptchaFailed?: string;
+    sendFailed?: string;
+    requiredField?: string;
+    fileTooLarge?: string;
+    emptyForm?: string;
+  };
 };
 
 export type SanityImageCrop = {
@@ -467,6 +481,15 @@ export type SiteInformation = {
     _key: string;
   }>;
   badges?: Array<string>;
+  interfaceText?: {
+    menuLabel?: string;
+    footerContactTitle?: string;
+    notFoundMetaTitle?: string;
+    notFoundEyebrow?: string;
+    notFoundTitle?: string;
+    notFoundBody?: string;
+    notFoundButtonLabel?: string;
+  };
 };
 
 export type Footer = {
@@ -688,7 +711,7 @@ export type AllSanitySchemaTypes =
 
 // Source: ../app/src/sanity/queries.ts
 // Variable: PAGE_QUERY
-// Query: *[_type == "page" && slug.current == $slug][0]{    _id,    title,    slug,    seo,    content[]{      ...,      primaryCta{  ...,  internalLink->{    "slug": slug.current  }},      secondaryCta{  ...,  internalLink->{    "slug": slug.current  }},      link{  ...,  internalLink->{    "slug": slug.current  }},      cta{  ...,  internalLink->{    "slug": slug.current  }},      highlight{        ...,        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      items[]{        ...,        link{  ...,  internalLink->{    "slug": slug.current  }},        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      // The form lives in its own document so several pages can share it, and      // the public half of the reCAPTCHA settings rides along — the secret      // stays server-side, in the submit route.      _type == "contactForm" => {        form->{  _id,  title,  showTitle,  mode,  fields[],  steps[]{    title,    fields[]  },  submitButtonText,  nextButtonText,  backButtonText,  successTitle,  successBody,  redirectAfterSubmit,  redirectLink{  ...,  internalLink->{    "slug": slug.current  }}},        // The panel's own CTA is nested, so the top-level link projections do        // not reach it — an internal link would arrive as a bare reference.        aside{          ...,          cta{  ...,  internalLink->{    "slug": slug.current  }}        },        "recaptcha": *[_type == "formGeneralSettings"][0]{          recaptchaEnabled,          recaptchaSiteKey        }      },      _type == "faqs" => {        ...,        faqs[]->{          ...,          link{  ...,  internalLink->{    "slug": slug.current  }}        },        link{  ...,  internalLink->{    "slug": slug.current  }}      }    }  }
+// Query: *[_type == "page" && slug.current == $slug][0]{    _id,    title,    slug,    seo,    content[]{      ...,      primaryCta{  ...,  internalLink->{    "slug": slug.current  }},      secondaryCta{  ...,  internalLink->{    "slug": slug.current  }},      link{  ...,  internalLink->{    "slug": slug.current  }},      cta{  ...,  internalLink->{    "slug": slug.current  }},      highlight{        ...,        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      items[]{        ...,        link{  ...,  internalLink->{    "slug": slug.current  }},        cta{  ...,  internalLink->{    "slug": slug.current  }}      },      // The form lives in its own document so several pages can share it, and      // the public half of the reCAPTCHA settings rides along — the secret      // stays server-side, in the submit route.      _type == "contactForm" => {        form->{  _id,  title,  showTitle,  mode,  fields[],  steps[]{    title,    fields[]  },  submitButtonText,  nextButtonText,  backButtonText,  successTitle,  successBody,  redirectAfterSubmit,  redirectLink{  ...,  internalLink->{    "slug": slug.current  }}},        // The panel's own CTA is nested, so the top-level link projections do        // not reach it — an internal link would arrive as a bare reference.        aside{          ...,          cta{  ...,  internalLink->{    "slug": slug.current  }}        },        "recaptcha": *[_type == "formGeneralSettings"][0]{          recaptchaEnabled,          recaptchaSiteKey        },        "formText": *[_type == "formGeneralSettings"][0].formText      },      _type == "faqs" => {        ...,        faqs[]->{          ...,          link{  ...,  internalLink->{    "slug": slug.current  }}        },        link{  ...,  internalLink->{    "slug": slug.current  }}      }    }  }
 export type PAGE_QUERY_RESULT = {
   _id: string;
   title: string;
@@ -799,6 +822,19 @@ export type PAGE_QUERY_RESULT = {
         recaptcha: {
           recaptchaEnabled: boolean | null;
           recaptchaSiteKey: string | null;
+        } | null;
+        formText: {
+          submitButtonText?: string;
+          nextButtonText?: string;
+          backButtonText?: string;
+          sendingText?: string;
+          stepCounter?: string;
+          recaptchaPrompt?: string;
+          recaptchaFailed?: string;
+          sendFailed?: string;
+          requiredField?: string;
+          fileTooLarge?: string;
+          emptyForm?: string;
         } | null;
       }
     | {
@@ -1067,6 +1103,7 @@ export type PAGE_QUERY_RESULT = {
           _key: string;
           cta: null;
         }>;
+        cardLinkLabel?: string;
         highlight: {
           badge?: string;
           title?: string;
@@ -1160,7 +1197,7 @@ export type NAVIGATION_QUERY_RESULT =
 
 // Source: ../app/src/sanity/queries.ts
 // Variable: SITE_INFORMATION_QUERY
-// Query: *[_id == "siteInformation"][0]{    name,    description,    language,    phone,    email,    address,    addressCountry,    badges,    // Only the URLs: they become sameAs in the structured data.    "socialLinks": socialLinks[].url,    "logoUrl": logo.asset->url  }
+// Query: *[_id == "siteInformation"][0]{    name,    description,    language,    phone,    email,    address,    addressCountry,    badges,    // Only the URLs: they become sameAs in the structured data.    "socialLinks": socialLinks[].url,    "logoUrl": logo.asset->url,    interfaceText  }
 export type SITE_INFORMATION_QUERY_RESULT =
   | {
       name: null;
@@ -1173,6 +1210,7 @@ export type SITE_INFORMATION_QUERY_RESULT =
       badges: null;
       socialLinks: null;
       logoUrl: null;
+      interfaceText: null;
     }
   | {
       name: null;
@@ -1185,6 +1223,7 @@ export type SITE_INFORMATION_QUERY_RESULT =
       badges: null;
       socialLinks: null;
       logoUrl: null;
+      interfaceText: null;
     }
   | {
       name: string;
@@ -1197,6 +1236,15 @@ export type SITE_INFORMATION_QUERY_RESULT =
       badges: Array<string> | null;
       socialLinks: Array<string> | null;
       logoUrl: string | null;
+      interfaceText: {
+        menuLabel?: string;
+        footerContactTitle?: string;
+        notFoundMetaTitle?: string;
+        notFoundEyebrow?: string;
+        notFoundTitle?: string;
+        notFoundBody?: string;
+        notFoundButtonLabel?: string;
+      } | null;
     }
   | null;
 
@@ -1258,7 +1306,7 @@ export type FORM_QUERY_RESULT = {
 
 // Source: ../app/src/sanity/queries.ts
 // Variable: FORM_SETTINGS_QUERY
-// Query: *[_type == "formGeneralSettings"][0]{    adminEmail,    fromEmail,    fromName,    mailLogo,    primaryColor,    textColor,    mailProvider,    mailjetApiKey,    mailjetApiSecret,    smtpHost,    smtpPort,    smtpSecurity,    smtpUser,    smtpPassword,    confirmationSubject,    confirmationMessage,    recaptchaEnabled,    recaptchaSecretKey  }
+// Query: *[_type == "formGeneralSettings"][0]{    adminEmail,    fromEmail,    fromName,    mailLogo,    primaryColor,    textColor,    mailProvider,    mailjetApiKey,    mailjetApiSecret,    smtpHost,    smtpPort,    smtpSecurity,    smtpUser,    smtpPassword,    confirmationSubject,    confirmationMessage,    recaptchaEnabled,    recaptchaSecretKey,    formText  }
 export type FORM_SETTINGS_QUERY_RESULT = {
   adminEmail: string;
   fromEmail: string | null;
@@ -1284,18 +1332,31 @@ export type FORM_SETTINGS_QUERY_RESULT = {
   confirmationMessage: string | null;
   recaptchaEnabled: boolean | null;
   recaptchaSecretKey: string | null;
+  formText: {
+    submitButtonText?: string;
+    nextButtonText?: string;
+    backButtonText?: string;
+    sendingText?: string;
+    stepCounter?: string;
+    recaptchaPrompt?: string;
+    recaptchaFailed?: string;
+    sendFailed?: string;
+    requiredField?: string;
+    fileTooLarge?: string;
+    emptyForm?: string;
+  } | null;
 } | null;
 
 // Query TypeMap
 import "@sanity/client";
 declare module "@sanity/client" {
   interface SanityQueries {
-    '\n  *[_type == "page" && slug.current == $slug][0]{\n    _id,\n    title,\n    slug,\n    seo,\n    content[]{\n      ...,\n      primaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      secondaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      highlight{\n        ...,\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      items[]{\n        ...,\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      // The form lives in its own document so several pages can share it, and\n      // the public half of the reCAPTCHA settings rides along \u2014 the secret\n      // stays server-side, in the submit route.\n      _type == "contactForm" => {\n        form->{\n  _id,\n  title,\n  showTitle,\n  mode,\n  fields[],\n  steps[]{\n    title,\n    fields[]\n  },\n  submitButtonText,\n  nextButtonText,\n  backButtonText,\n  successTitle,\n  successBody,\n  redirectAfterSubmit,\n  redirectLink{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n},\n        // The panel\'s own CTA is nested, so the top-level link projections do\n        // not reach it \u2014 an internal link would arrive as a bare reference.\n        aside{\n          ...,\n          cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        "recaptcha": *[_type == "formGeneralSettings"][0]{\n          recaptchaEnabled,\n          recaptchaSiteKey\n        }\n      },\n      _type == "faqs" => {\n        ...,\n        faqs[]->{\n          ...,\n          link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      }\n    }\n  }\n': PAGE_QUERY_RESULT;
+    '\n  *[_type == "page" && slug.current == $slug][0]{\n    _id,\n    title,\n    slug,\n    seo,\n    content[]{\n      ...,\n      primaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      secondaryCta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n      highlight{\n        ...,\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      items[]{\n        ...,\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n        cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      },\n      // The form lives in its own document so several pages can share it, and\n      // the public half of the reCAPTCHA settings rides along \u2014 the secret\n      // stays server-side, in the submit route.\n      _type == "contactForm" => {\n        form->{\n  _id,\n  title,\n  showTitle,\n  mode,\n  fields[],\n  steps[]{\n    title,\n    fields[]\n  },\n  submitButtonText,\n  nextButtonText,\n  backButtonText,\n  successTitle,\n  successBody,\n  redirectAfterSubmit,\n  redirectLink{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n},\n        // The panel\'s own CTA is nested, so the top-level link projections do\n        // not reach it \u2014 an internal link would arrive as a bare reference.\n        aside{\n          ...,\n          cta{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        "recaptcha": *[_type == "formGeneralSettings"][0]{\n          recaptchaEnabled,\n          recaptchaSiteKey\n        },\n        "formText": *[_type == "formGeneralSettings"][0].formText\n      },\n      _type == "faqs" => {\n        ...,\n        faqs[]->{\n          ...,\n          link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n        },\n        link{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n      }\n    }\n  }\n': PAGE_QUERY_RESULT;
     '\n  *[_type == "page" && defined(slug.current)]{\n    "slug": slug.current,\n    _updatedAt\n  }\n': PAGE_SLUGS_QUERY_RESULT;
     '\n  *[_id == "navigation"][0]{\n    navLeft[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n},\n    navRight[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n  }\n': NAVIGATION_QUERY_RESULT;
-    '\n  *[_id == "siteInformation"][0]{\n    name,\n    description,\n    language,\n    phone,\n    email,\n    address,\n    addressCountry,\n    badges,\n    // Only the URLs: they become sameAs in the structured data.\n    "socialLinks": socialLinks[].url,\n    "logoUrl": logo.asset->url\n  }\n': SITE_INFORMATION_QUERY_RESULT;
+    '\n  *[_id == "siteInformation"][0]{\n    name,\n    description,\n    language,\n    phone,\n    email,\n    address,\n    addressCountry,\n    badges,\n    // Only the URLs: they become sameAs in the structured data.\n    "socialLinks": socialLinks[].url,\n    "logoUrl": logo.asset->url,\n    interfaceText\n  }\n': SITE_INFORMATION_QUERY_RESULT;
     '\n  *[_id == "footer"][0]{\n    linkGroups[]{\n      title,\n      links[]{\n  ...,\n  internalLink->{\n    "slug": slug.current\n  }\n}\n    },\n    copyright\n  }\n': FOOTER_QUERY_RESULT;
     '\n  *[_id == $formId && _type == "form"][0]{\n    _id,\n    title,\n    mailRecipients,\n    mailSubject,\n    mailMessage,\n    sendCopyToSubmitter,\n    copySubject,\n    copyMessage,\n    "fields": select(\n      mode == "steps" => steps[].fields[]{label, name, type, isRequired},\n      fields[]{label, name, type, isRequired}\n    )\n  }\n': FORM_QUERY_RESULT;
-    '\n  *[_type == "formGeneralSettings"][0]{\n    adminEmail,\n    fromEmail,\n    fromName,\n    mailLogo,\n    primaryColor,\n    textColor,\n    mailProvider,\n    mailjetApiKey,\n    mailjetApiSecret,\n    smtpHost,\n    smtpPort,\n    smtpSecurity,\n    smtpUser,\n    smtpPassword,\n    confirmationSubject,\n    confirmationMessage,\n    recaptchaEnabled,\n    recaptchaSecretKey\n  }\n': FORM_SETTINGS_QUERY_RESULT;
+    '\n  *[_type == "formGeneralSettings"][0]{\n    adminEmail,\n    fromEmail,\n    fromName,\n    mailLogo,\n    primaryColor,\n    textColor,\n    mailProvider,\n    mailjetApiKey,\n    mailjetApiSecret,\n    smtpHost,\n    smtpPort,\n    smtpSecurity,\n    smtpUser,\n    smtpPassword,\n    confirmationSubject,\n    confirmationMessage,\n    recaptchaEnabled,\n    recaptchaSecretKey,\n    formText\n  }\n': FORM_SETTINGS_QUERY_RESULT;
   }
 }

@@ -5,7 +5,7 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Reveal } from '@/components/ui/Reveal';
 import { Wrap } from '@/components/ui/Wrap';
 import { CONTACT_FORM } from '@/lib/demo-content';
-import type { FormDefinition } from '@/lib/form-fields';
+import type { FormDefinition, FormText } from '@/lib/form-fields';
 
 export type ContactFormAsideItem = {
   icon: ContactIconName;
@@ -27,6 +27,8 @@ export type ContactFormProps = {
   note?: string;
   /** The form itself, from the referenced `form` document. */
   form?: FormDefinition;
+  /** Shared form copy from Form settings; the renderer has defaults. */
+  formText?: FormText;
   aside?: ContactFormAside;
   recaptcha?: FormRecaptcha;
   /** Values a hidden field can pick up by `{{token}}` — see FormRenderer. */
@@ -50,6 +52,7 @@ export function ContactForm({
   lead = DEFAULTS.lead,
   note = DEFAULTS.note,
   form,
+  formText,
   aside = DEFAULTS.aside,
   recaptcha,
   context,
@@ -73,6 +76,7 @@ export function ContactForm({
           {form ? (
             <FormRenderer
               form={form}
+              text={formText}
               variant='stacked'
               recaptcha={recaptcha}
               context={context}

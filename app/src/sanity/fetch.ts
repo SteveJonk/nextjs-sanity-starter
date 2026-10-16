@@ -9,9 +9,10 @@ export const SANITY_TAG = 'sanity';
 
 /**
  * Safety net only. If the webhook is misconfigured or a delivery is lost, the
- * cache still refreshes within an hour instead of staying stale.
+ * cache still refreshes within a day instead of staying stale. Kept long
+ * because every refresh is a function run and an ISR write on Vercel.
  */
-export const REVALIDATE = 3600;
+export const REVALIDATE = 86400;
 
 /** Fetch options shared by every cached Sanity read. */
 export const sanityCache = { next: { revalidate: REVALIDATE, tags: [SANITY_TAG] } };

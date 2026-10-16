@@ -44,10 +44,6 @@ export default process.env.NEXT_PUBLIC_SENTRY_DSN
       // headroom and want stack traces from third-party chunks.
       widenClientFileUpload: false,
 
-      // Routes browser requests to Sentry through the app, past ad-blockers.
-      // Costs you the traffic. Must not collide with middleware matchers.
-      tunnelRoute: '/monitoring',
-
       webpack: {
         automaticVercelMonitors: true,
         treeshake: {

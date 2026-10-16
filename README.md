@@ -478,7 +478,7 @@ Three more, all optional:
 
 | Variable | When | What |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | runtime | Share of transactions traced, 0-1. Defaults to `1`; lower it once the site has traffic |
+| `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | runtime | Share of transactions traced, 0-1. Defaults to `0.1`; raise it temporarily when debugging performance |
 | `SENTRY_ORG` / `SENTRY_PROJECT` | build | Slugs from the Sentry URL, for source-map upload |
 | `SENTRY_AUTH_TOKEN` | build | Token with `project:releases`. Without it the build works, it just skips the upload and stack traces stay minified |
 | `SENTRY_TEST_SECRET` | runtime | Unlocks `/sentry-test?secret=…`. Unset, the test page and route are 404 |
@@ -500,9 +500,9 @@ app/next.config.ts             withSentryConfig, only when a DSN is set
 
 Two settings in `next.config.ts` worth knowing about:
 
-- **`tunnelRoute: '/monitoring'`** routes browser reports through the app so
-  ad-blockers do not swallow them. It costs you the traffic, and it must not
-  collide with a middleware matcher.
+- **No `tunnelRoute`**: routing browser reports through the app gets them past
+  ad-blockers, but every report becomes a function call on the host. Left off
+  to keep usage down.
 - **`widenClientFileUpload: false`** — turning it on roughly doubles
   source-map upload size and build memory, which OOM-kills small build servers.
   Turn it on only if you have the headroom.
@@ -608,8 +608,8 @@ npm run typegen      npm run schema:extract
   an error, not as a silently empty page.
 - Placeholder images live in `app/public/images/`. Replace them with real photos
   and update the paths in `demo-content.ts`.
-- Sanity reads are cached under one tag (`sanity`, see `src/sanity/fetch.ts`) and refresh at most once an hour on their own. To make a publish go live within seconds, per project:
+- Sanity reads are cached under one tag (`sanity`, see `src/sanity/fetch.ts`) and refresh at most once a day on their own. To make a publish go live within seconds, per project:
   1. Set `SANITY_REVALIDATE_SECRET` on the host to a long random string.
   2. In sanity.io/manage -> API -> Webhooks, add one: URL `<site>/api/revalidate`, dataset `production`, trigger on create/update/delete, projection `{_type}`, method POST, and the same secret.
 
-  Without the webhook the site still works; edits just take up to an hour to appear.
+  Without the webhook the site still works; edits just take up to a day to appear. **Refresh website** in the studio expires the cache by hand (it needs `SANITY_STUDIO_SITE_URL` in `studio/.env`, and the editor pastes `SANITY_REVALIDATE_SECRET` once).

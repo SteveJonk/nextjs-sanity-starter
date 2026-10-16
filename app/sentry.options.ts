@@ -12,10 +12,10 @@ export const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 export const sentryOptions = {
   dsn: SENTRY_DSN,
-  // Share of transactions traced. 1 is fine to start with; lower it once the
-  // site has traffic.
+  // Share of transactions traced. Raise it temporarily when debugging
+  // performance; every trace counts against the Sentry quota.
   tracesSampleRate: Number(
-    process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE ?? 1,
+    process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE ?? 0.1,
   ),
   dataCollection: {
     // No user data, no request bodies. Widen deliberately if you ever need it:

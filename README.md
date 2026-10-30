@@ -279,7 +279,7 @@ field is an editor's job, not a deploy.
   where the answers are mailed. Switch **Type** to *In steps* and the same
   fields spread over several steps with a progress bar and per-step validation.
 - **Form settings** (a singleton) — the shared mail settings, the mail's logo
-  and colours, and the reCAPTCHA switch.
+  and colours, and the spam check (off, reCAPTCHA or Turnstile).
 - **`contactForm`** (a block) — drops a form onto a page, with the surrounding
   copy and an optional contact panel beside it. The form is a *reference*, so
   the same one can appear on several pages and its fields live in one place.
@@ -333,7 +333,8 @@ SMTP_HOST=              SMTP_PORT=          SMTP_SECURITY=   # starttls | ssl | 
 SMTP_USER=              SMTP_PASSWORD=
 MAIL_FROM_EMAIL=        CONTACT_ADMIN_EMAIL=
 MAIL_TEST_SECRET=       # guards /api/test-mail
-RECAPTCHA_SECRET_KEY=   # only when reCAPTCHA is switched on
+RECAPTCHA_SECRET_KEY=   # only when reCAPTCHA is the spam check
+TURNSTILE_SECRET_KEY=   # only when Turnstile is the spam check
 ```
 
 **Send test mail.** Form settings → Mail has a panel that sends one mail with
@@ -345,10 +346,17 @@ secret into the panel once; it is kept in the browser's localStorage, never in
 the dataset or the studio bundle. The panel posts to `SANITY_STUDIO_SITE_URL`
 (studio `.env`), or to an address the editor types in the panel.
 
-reCAPTCHA is off by default, and while it is off **no Google script is loaded**
-— same stance as the analytics tags. Switch it on in Form settings, put the
-site key there (it is public and ships in the page) and the secret in `.env`.
-The route fails closed: any doubt about a token is a rejected submission.
+The spam check is off by default, and while it is off **no third-party script
+is loaded** — same stance as the analytics tags. Pick Google reCAPTCHA v2 or
+Cloudflare Turnstile in Form settings → Spam, put that provider's site key
+there (it is public and ships in the page) and its secret in `.env`. Even when
+on, the script is only fetched on a page with a form, once the visitor scrolls
+near it.
+
+A bad or missing token is a rejected submission. Only when the provider itself
+cannot be reached does a submission go through, mailed with an
+`[Unverified]` subject so it can be filtered. The route asks the provider even
+when the browser sent no token, so a bot cannot fake an outage.
 
 Uploads are capped at 5 MB and travel as mail attachments; nothing is stored.
 

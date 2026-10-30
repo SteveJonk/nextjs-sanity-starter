@@ -19,7 +19,7 @@ export const FORM_TEXT_DEFAULTS = {
   stepCounter: 'Step {{step}} of {{total}}',
   recaptchaPrompt: 'Please confirm you are not a robot.',
   sendFailed: 'Sending failed. Please try again later.',
-  recaptchaFailed: 'The reCAPTCHA check failed. Please try again.',
+  recaptchaFailed: 'The spam check failed. Please try again.',
   requiredField: '"{{label}}" is required.',
   fileTooLarge: 'File "{{file}}" is larger than 5 MB.',
   emptyForm: 'The form was empty.',

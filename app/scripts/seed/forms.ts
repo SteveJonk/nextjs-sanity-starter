@@ -26,7 +26,7 @@ async function upsertFormSettings() {
     confirmationMessage: 'A new message came in through the website.',
     primaryColor: '#0f172a',
     textColor: '#0f172a',
-    recaptchaEnabled: false,
+    captchaProvider: 'none',
     formText: {...FORM_TEXT_DEFAULTS},
   })
 

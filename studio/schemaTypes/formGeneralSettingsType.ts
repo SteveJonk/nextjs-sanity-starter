@@ -13,6 +13,42 @@ import {MailTest} from '../tools/MailTest'
  * belong in the app environment (MAILJET_API_KEY / MAILJET_API_SECRET,
  * SMTP_USER / SMTP_PASSWORD), which wins over whatever is stored here.
  */
+type CaptchaProvider = 'none' | 'recaptcha' | 'turnstile'
+
+/** Mirrors the GROQ fallback in the app's queries.ts. */
+function captchaOf(document?: Record<string, unknown>) {
+  return (document?.captchaProvider ?? (document?.recaptchaEnabled ? 'recaptcha' : 'none')) as CaptchaProvider
+}
+
+/** Site key (public) and secret (fallback for the env var) of one provider. */
+function captchaKeyFields(provider: CaptchaProvider, label: string) {
+  const env = `${provider.toUpperCase()}_SECRET_KEY`
+  return [
+    defineField({
+      name: `${provider}SiteKey`,
+      title: `${label} site key`,
+      type: 'string',
+      group: 'spam',
+      description: 'Public — it ships in the page.',
+      hidden: ({document}) => captchaOf(document) !== provider,
+      validation: (rule) =>
+        rule.custom((field, context) =>
+          captchaOf(context.document) === provider && !field
+            ? `Site key is required when ${label} is the spam check`
+            : true,
+        ),
+    }),
+    defineField({
+      name: `${provider}SecretKey`,
+      title: `${label} secret key`,
+      type: 'string',
+      group: 'spam',
+      description: `Fallback only — prefer ${env} in the app environment.`,
+      hidden: ({document}) => captchaOf(document) !== provider,
+    }),
+  ]
+}
+
 export const formGeneralSettingsType = defineType({
   name: 'formGeneralSettings',
   title: 'Form settings',
@@ -203,41 +239,32 @@ export const formGeneralSettingsType = defineType({
       validation: (rule) => rule.regex(/^#[0-9a-fA-F]{6}$/, {name: 'hex colour'}),
     }),
     defineField({
+      name: 'captchaProvider',
+      title: 'Spam check',
+      type: 'string',
+      group: 'spam',
+      description:
+        'Shown above the send button of every form. Its script only loads on pages with a form, once the visitor scrolls near it.',
+      options: {
+        list: [
+          {title: 'Off', value: 'none'},
+          {title: 'Google reCAPTCHA v2 ("I am not a robot")', value: 'recaptcha'},
+          {title: 'Cloudflare Turnstile', value: 'turnstile'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'none',
+    }),
+    defineField({
+      // Replaced by `captchaProvider`; still read while that is unset, so an
+      // older document that had reCAPTCHA on keeps it.
       name: 'recaptchaEnabled',
-      title: 'Enable reCAPTCHA',
       type: 'boolean',
       group: 'spam',
-      description: 'Google reCAPTCHA v2 ("I am not a robot") on every form.',
-      initialValue: false,
+      hidden: true,
     }),
-    defineField({
-      name: 'recaptchaSiteKey',
-      title: 'reCAPTCHA site key',
-      type: 'string',
-      group: 'spam',
-      description: 'Public — it ships in the page.',
-      hidden: ({document}) => !document?.recaptchaEnabled,
-      validation: (rule) =>
-        rule.custom((field, context) =>
-          context.document?.recaptchaEnabled && !field
-            ? 'Site key is required when reCAPTCHA is enabled'
-            : true,
-        ),
-    }),
-    defineField({
-      name: 'recaptchaSecretKey',
-      title: 'reCAPTCHA secret key',
-      type: 'string',
-      group: 'spam',
-      description: 'Fallback only — prefer RECAPTCHA_SECRET_KEY in the app environment.',
-      hidden: ({document}) => !document?.recaptchaEnabled,
-      validation: (rule) =>
-        rule.custom((field, context) =>
-          context.document?.recaptchaEnabled && !field
-            ? 'Secret key is required when reCAPTCHA is enabled'
-            : true,
-        ),
-    }),
+    ...captchaKeyFields('recaptcha', 'reCAPTCHA'),
+    ...captchaKeyFields('turnstile', 'Turnstile'),
     defineField({
       name: 'formText',
       title: 'Interface text',
@@ -271,8 +298,8 @@ export const formGeneralSettingsType = defineType({
           type: 'string',
           description: 'Multi-step forms. {{step}} is the current step, {{total}} the number of steps.',
         }),
-        defineField({name: 'recaptchaPrompt', title: 'reCAPTCHA not ticked', type: 'string'}),
-        defineField({name: 'recaptchaFailed', title: 'reCAPTCHA check failed', type: 'string'}),
+        defineField({name: 'recaptchaPrompt', title: 'Spam check not completed', type: 'string'}),
+        defineField({name: 'recaptchaFailed', title: 'Spam check failed', type: 'string'}),
         defineField({name: 'sendFailed', title: 'Sending failed', type: 'string'}),
         defineField({
           name: 'requiredField',

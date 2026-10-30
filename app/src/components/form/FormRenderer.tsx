@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { cn } from '@/lib/cn';
 import {
   FORM_TEXT_DEFAULTS,
@@ -13,13 +12,8 @@ import {
   type FormDefinition,
   type FormText,
 } from '@/lib/form-fields';
+import { Captcha, type CaptchaHandle, type FormCaptcha } from './Captcha';
 import { FormField, type FormFieldVariant } from './fields';
-
-/** Public half of the reCAPTCHA settings — the secret stays server-side. */
-export type FormRecaptcha = {
-  enabled: boolean;
-  siteKey: string;
-};
 
 export type FormRendererProps = {
   form: FormDefinition;
@@ -30,7 +24,7 @@ export type FormRendererProps = {
   lead?: string;
   /** Small print under the form, shown in every state. */
   footer?: ReactNode;
-  recaptcha?: FormRecaptcha;
+  captcha?: FormCaptcha;
   variant?: FormFieldVariant;
   /**
    * Values the surrounding page knows and the visitor does not type — which
@@ -128,7 +122,7 @@ export function FormRenderer({
   title,
   lead,
   footer,
-  recaptcha,
+  captcha,
   variant = 'compact',
   context,
 }: FormRendererProps) {
@@ -137,13 +131,12 @@ export function FormRenderer({
   const [status, setStatus] = useState<'idle' | 'sending' | 'done'>('idle');
   const [error, setError] = useState<string | null>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const captchaRef = useRef<CaptchaHandle>(null);
 
   const styles = VARIANTS[variant];
   const steps = toSteps(form);
   const total = steps.length;
   const isLastStep = step >= total - 1;
-  const usesRecaptcha = Boolean(recaptcha?.enabled && recaptcha.siteKey);
 
   function controlsOf(index: number): Control[] {
     const container = stepRefs.current[index];
@@ -189,13 +182,15 @@ export function FormRenderer({
     const body = new FormData(event.currentTarget);
     body.set('formId', form.id);
 
-    if (usesRecaptcha) {
-      const token = recaptchaRef.current?.getValue();
-      if (!token) {
+    if (captcha) {
+      const token = captchaRef.current?.token() ?? null;
+      if (token === '') {
         setError(text.recaptchaPrompt);
         return;
       }
-      body.set('recaptchaToken', token);
+      // null: the widget never came up. Send anyway — the server lets it
+      // through only if the provider is really down.
+      if (token) body.set('captchaToken', token);
     }
 
     setStatus('sending');
@@ -222,7 +217,7 @@ export function FormRenderer({
       setStatus('done');
     } catch (submitError) {
       // A token is single-use: clear it so a retry gets a fresh one.
-      recaptchaRef.current?.reset();
+      captchaRef.current?.reset();
       setStatus('idle');
       setError(
         submitError instanceof Error ? submitError.message : text.sendFailed,
@@ -307,11 +302,8 @@ export function FormRenderer({
           </div>
         ))}
 
-        {usesRecaptcha && isLastStep ? (
-          <div className='mb-6'>
-            <ReCAPTCHA ref={recaptchaRef} sitekey={recaptcha!.siteKey} />
-          </div>
-        ) : null}
+        {/* Mounted on every step so the token survives Back/Next; it loads once the last step shows. */}
+        {captcha ? <Captcha ref={captchaRef} {...captcha} hidden={!isLastStep} /> : null}
 
         {error ? (
           <p role='alert' className='mb-4 text-[0.9rem] text-danger'>

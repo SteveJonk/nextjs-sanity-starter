@@ -15,6 +15,12 @@ const linkExpansion = /* groq */ `{
 }`;
 
 /**
+ * Which spam check Form settings picked. Older documents only have the
+ * `recaptchaEnabled` switch; they keep reCAPTCHA until a provider is chosen.
+ */
+const captchaProvider = /* groq */ `"captchaProvider": coalesce(captchaProvider, select(recaptchaEnabled => "recaptcha", "none"))`;
+
+/**
  * Everything the renderer needs to draw a form.
  *
  * `fields[]` and `steps[]` are spread wholesale — a form field is a flat object
@@ -70,7 +76,7 @@ export const PAGE_QUERY = defineQuery(`
         cta${linkExpansion}
       },
       // The form lives in its own document so several pages can share it, and
-      // the public half of the reCAPTCHA settings rides along — the secret
+      // the public half of the spam-check settings rides along — the secret
       // stays server-side, in the submit route.
       _type == "contactForm" => {
         form->${formProjection},
@@ -80,9 +86,10 @@ export const PAGE_QUERY = defineQuery(`
           ...,
           cta${linkExpansion}
         },
-        "recaptcha": *[_type == "formGeneralSettings"][0]{
-          recaptchaEnabled,
-          recaptchaSiteKey
+        "captcha": *[_type == "formGeneralSettings"][0]{
+          ${captchaProvider},
+          recaptchaSiteKey,
+          turnstileSiteKey
         },
         "formText": *[_type == "formGeneralSettings"][0].formText
       },
@@ -192,8 +199,9 @@ export const FORM_SETTINGS_QUERY = defineQuery(`
     smtpPassword,
     confirmationSubject,
     confirmationMessage,
-    recaptchaEnabled,
+    ${captchaProvider},
     recaptchaSecretKey,
+    turnstileSecretKey,
     formText
   }
 `);

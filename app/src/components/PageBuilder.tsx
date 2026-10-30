@@ -10,6 +10,7 @@ import { PageHero } from '@/components/blocks/PageHero';
 import { Services } from '@/components/blocks/Services';
 import { Steps } from '@/components/blocks/Steps';
 import type { ContactIconName } from '@/components/ui/ContactIcon';
+import type { CaptchaProvider } from '@/lib/captcha';
 import { resolveFormText, toFormDefinition, type FormText } from '@/lib/form-fields';
 import { imageSrc, toImage, type SanityImage } from '@/sanity/image';
 import { resolveHref, type SanityLabeledLink, type SanityLink } from '@/lib/links';
@@ -263,9 +264,16 @@ function renderBlock(block: PageBlock, path?: string) {
         | undefined;
       // Only the site key travels to the browser; the secret is read by the
       // submit route, which never sends it anywhere.
-      const recaptcha = block.recaptcha as
-        | { recaptchaEnabled?: boolean; recaptchaSiteKey?: string }
+      const captcha = block.captcha as
+        | { captchaProvider?: string; recaptchaSiteKey?: string; turnstileSiteKey?: string }
         | undefined;
+      const provider = captcha?.captchaProvider;
+      const siteKey =
+        provider === 'recaptcha'
+          ? captcha?.recaptchaSiteKey
+          : provider === 'turnstile'
+            ? captcha?.turnstileSiteKey
+            : undefined;
 
       return (
         <ContactForm
@@ -293,11 +301,7 @@ function renderBlock(block: PageBlock, path?: string) {
                 } satisfies ContactFormAside)
               : undefined
           }
-          recaptcha={
-            recaptcha?.recaptchaEnabled && recaptcha.recaptchaSiteKey
-              ? { enabled: true, siteKey: recaptcha.recaptchaSiteKey }
-              : undefined
-          }
+          captcha={siteKey ? { provider: provider as CaptchaProvider, siteKey } : undefined}
         />
       );
     }

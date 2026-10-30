@@ -2276,6 +2276,27 @@
         },
         "optional": true
       },
+      "captchaProvider": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "union",
+          "of": [
+            {
+              "type": "string",
+              "value": "none"
+            },
+            {
+              "type": "string",
+              "value": "recaptcha"
+            },
+            {
+              "type": "string",
+              "value": "turnstile"
+            }
+          ]
+        },
+        "optional": true
+      },
       "recaptchaEnabled": {
         "type": "objectAttribute",
         "value": {
@@ -2291,6 +2312,20 @@
         "optional": true
       },
       "recaptchaSecretKey": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "turnstileSiteKey": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "turnstileSecretKey": {
         "type": "objectAttribute",
         "value": {
           "type": "string"

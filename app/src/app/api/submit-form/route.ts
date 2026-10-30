@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyCaptcha } from '@/lib/captcha';
 import { fillTokens, resolveFormText } from '@/lib/form-fields';
 import { renderFormMail } from '@/lib/form-mail';
 import { missingMailMessage, resolveMailSettings, sendMail } from '@/lib/mail';
@@ -10,22 +11,6 @@ export const runtime = 'nodejs';
 
 /** Bigger uploads are rejected rather than silently dropped from the mail. */
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
-
-/** Google's siteverify. Returns false on any doubt — this gate fails closed. */
-async function verifyRecaptcha(token: string, secret: string) {
-  try {
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ secret, response: token }),
-    });
-    const result = (await response.json()) as { success?: boolean };
-    return result.success === true;
-  } catch (error) {
-    console.error('submit-form: reCAPTCHA verification failed', error);
-    return false;
-  }
-}
 
 function fail(message: string, status: number) {
   return NextResponse.json({ success: false, message }, { status });
@@ -62,16 +47,20 @@ export async function POST(request: Request) {
 
   // Spam gate before any real work. The secret belongs in the environment: a
   // Sanity dataset is world-readable, so the studio value is only a fallback.
-  const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY || settings?.recaptchaSecretKey;
-  if (settings?.recaptchaEnabled) {
-    if (!recaptchaSecret) {
-      console.error('submit-form: reCAPTCHA is enabled but no secret key is set');
+  const captcha = settings?.captchaProvider;
+  let unverified = false;
+  if (captcha === 'recaptcha' || captcha === 'turnstile') {
+    const secret =
+      captcha === 'turnstile'
+        ? process.env.TURNSTILE_SECRET_KEY || settings?.turnstileSecretKey
+        : process.env.RECAPTCHA_SECRET_KEY || settings?.recaptchaSecretKey;
+    if (!secret) {
+      console.error(`submit-form: ${captcha} is the spam check but no secret key is set`);
       return fail('This form is not fully configured yet.', 500);
     }
-    const token = String(body.get('recaptchaToken') ?? '');
-    if (!token || !(await verifyRecaptcha(token, recaptchaSecret))) {
-      return fail(copy.recaptchaFailed, 400);
-    }
+    const verdict = await verifyCaptcha(captcha, String(body.get('captchaToken') ?? ''), secret);
+    if (verdict === 'failed') return fail(copy.recaptchaFailed, 400);
+    unverified = verdict === 'unavailable';
   }
 
   const answers: { label: string; value: string }[] = [];
@@ -149,8 +138,11 @@ export async function POST(request: Request) {
     form.mailSubject ||
     settings?.confirmationSubject ||
     `New message from ${form.title ?? 'the website'}`;
+  // The provider was down: the mail still goes out, tagged so it can be
+  // filtered. The sender's copy below keeps the plain subject.
+  const adminSubject = unverified ? `[Unverified] ${subject}` : subject;
   const mail = renderFormMail({
-    title: subject,
+    title: adminSubject,
     intro:
       form.mailMessage ||
       settings?.confirmationMessage ||
@@ -166,7 +158,7 @@ export async function POST(request: Request) {
       fromName,
       to: recipients,
       replyTo,
-      subject,
+      subject: adminSubject,
       html: mail.html,
       text: mail.text,
       attachments,

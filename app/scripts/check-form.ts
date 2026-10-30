@@ -1,7 +1,7 @@
 /**
  * The smallest thing that fails when the CMS-driven form breaks.
  *
- * Five rules carry the weight here:
+ * Six rules carry the weight here:
  *   1. `toSteps` turns either mode — one page or several steps — into the one
  *      shape the renderer draws, so there is no second code path;
  *   2. half-width fields pair up and everything else gets its own row;
@@ -10,7 +10,9 @@
  *      silently stops accepting answers;
  *   4. a form only redirects when the switch is on *and* the link resolves —
  *      otherwise the visitor is stranded on a form already sent;
- *   5. the mail escapes what it interpolates: an answer is visitor input.
+ *   5. the mail escapes what it interpolates: an answer is visitor input;
+ *   6. the spam check lets a submission through only when the provider
+ *      itself is down — a missing token while it is up is a rejection.
  *
  * Run with `npm run check:form`. No Sanity, no React, no mail provider.
  */
@@ -25,8 +27,9 @@ import {
   toSteps,
   type FormFieldDefinition,
 } from '@/lib/form-fields';
+import { verifyCaptcha } from '@/lib/captcha';
 import { renderFormMail } from '@/lib/form-mail';
-import { FORM_QUERY } from '@/sanity/queries';
+import { FORM_QUERY, FORM_SETTINGS_QUERY } from '@/sanity/queries';
 
 function names(rows: FormFieldDefinition[][]) {
   return rows.map((row) => row.map((field) => field.name));
@@ -200,7 +203,46 @@ assert.ok(
   'ampersands and quotes are escaped too',
 );
 
-checkAllowList()
+// 6. Fail open on an outage only. `fetch` is stubbed: no provider is called.
+async function checkCaptcha() {
+  const realFetch = globalThis.fetch;
+  const answer = (reply: () => Promise<Response>) => {
+    globalThis.fetch = reply;
+  };
+  const quiet = { error: console.error, warn: console.warn };
+  console.error = console.warn = () => {};
+  try {
+    answer(async () => Response.json({ success: true }));
+    assert.equal(await verifyCaptcha('turnstile', 'token', 'secret'), 'passed');
+    answer(async () => Response.json({ success: false, 'error-codes': ['missing-input-response'] }));
+    assert.equal(
+      await verifyCaptcha('turnstile', '', 'secret'),
+      'failed',
+      'no token while the provider is up is a rejection, not an outage',
+    );
+    answer(async () => {
+      throw new TypeError('fetch failed');
+    });
+    assert.equal(await verifyCaptcha('recaptcha', '', 'secret'), 'unavailable');
+    answer(async () => new Response('Bad gateway', { status: 502 }));
+    assert.equal(await verifyCaptcha('turnstile', 'token', 'secret'), 'unavailable');
+  } finally {
+    globalThis.fetch = realFetch;
+    Object.assign(console, quiet);
+  }
+
+  // A document from before the provider switch keeps reCAPTCHA.
+  const provider = async (doc: Record<string, unknown>) => {
+    const dataset = [{ _id: 'formGeneralSettings', _type: 'formGeneralSettings', ...doc }];
+    const result = await (await evaluate(parse(FORM_SETTINGS_QUERY), { dataset })).get();
+    return result.captchaProvider;
+  };
+  assert.equal(await provider({ recaptchaEnabled: true }), 'recaptcha');
+  assert.equal(await provider({}), 'none');
+  assert.equal(await provider({ recaptchaEnabled: true, captchaProvider: 'turnstile' }), 'turnstile');
+}
+
+Promise.all([checkAllowList(), checkCaptcha()])
   .then(() => console.log('check:form — all assertions passed'))
   .catch((error) => {
     console.error(error);

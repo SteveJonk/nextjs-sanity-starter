@@ -1,4 +1,5 @@
-import { FormRenderer, type FormRecaptcha } from '@/components/form/FormRenderer';
+import type { FormCaptcha } from '@/components/form/Captcha';
+import { FormRenderer } from '@/components/form/FormRenderer';
 import { Button } from '@/components/ui/Button';
 import { ContactIcon, type ContactIconName } from '@/components/ui/ContactIcon';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -30,7 +31,7 @@ export type ContactFormProps = {
   /** Shared form copy from Form settings; the renderer has defaults. */
   formText?: FormText;
   aside?: ContactFormAside;
-  recaptcha?: FormRecaptcha;
+  captcha?: FormCaptcha;
   /** Values a hidden field can pick up by `{{token}}` — see FormRenderer. */
   context?: Record<string, string>;
 };
@@ -54,7 +55,7 @@ export function ContactForm({
   form,
   formText,
   aside = DEFAULTS.aside,
-  recaptcha,
+  captcha,
   context,
 }: ContactFormProps = {}) {
   return (
@@ -78,7 +79,7 @@ export function ContactForm({
               form={form}
               text={formText}
               variant='stacked'
-              recaptcha={recaptcha}
+              captcha={captcha}
               context={context}
               footer={note ? <p className='mt-4 text-[0.84rem] text-subtle'>{note}</p> : null}
             />

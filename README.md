@@ -533,7 +533,8 @@ layer. Set none of them and the image builds without Sentry.
 ```
 app/
   src/app/            routes: / , /[slug] , not-found, sitemap, robots,
-                      api/submit-form, api/test-mail, globals.css (the theme)
+                      api/submit-form, api/test-mail, api/health,
+                      globals.css (the theme)
   src/components/
     blocks/           one component per page-builder block
     layout/           header, footer

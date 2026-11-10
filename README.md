@@ -303,7 +303,7 @@ items at that page. Run in that order, or let `npm run seed` do it for you.
    mail. `npm run check:form` asserts that the query and the renderer agree,
    because if they drift the form quietly stops recording answers.
 3. Answers are rendered into an HTML + plain-text mail (`src/lib/form-mail.ts`)
-   and sent through Mailjet or the client's own SMTP server (Form settings →
+   and sent through Mailjet, Resend or the client's own SMTP server (Form settings →
    Mail provider). `src/lib/mail.ts` is the only provider-specific file:
    `resolveMailSettings` picks the provider and credentials, `sendMail` sends.
 
@@ -327,8 +327,9 @@ and falls back to Form settings, which is convenient locally and wrong in
 production:
 
 ```bash
-MAIL_PROVIDER=          # mailjet | smtp — overrides Form settings
+MAIL_PROVIDER=          # mailjet | resend | smtp — overrides Form settings
 MAILJET_API_KEY=        MAILJET_API_SECRET=
+RESEND_API_KEY=
 SMTP_HOST=              SMTP_PORT=          SMTP_SECURITY=   # starttls | ssl | none
 SMTP_USER=              SMTP_PASSWORD=
 MAIL_FROM_EMAIL=        CONTACT_ADMIN_EMAIL=

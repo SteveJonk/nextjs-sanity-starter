@@ -2139,6 +2139,10 @@
             },
             {
               "type": "string",
+              "value": "resend"
+            },
+            {
+              "type": "string",
               "value": "smtp"
             }
           ]
@@ -2153,6 +2157,13 @@
         "optional": true
       },
       "mailjetApiSecret": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "resendApiKey": {
         "type": "objectAttribute",
         "value": {
           "type": "string"

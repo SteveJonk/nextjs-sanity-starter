@@ -5,13 +5,13 @@ import {MailTest} from '../tools/MailTest'
 /**
  * Mail and spam settings shared by every `form`. A singleton.
  *
- * Sending goes through Mailjet's HTTP API or the client's own SMTP server,
+ * Sending goes through Mailjet's or Resend's HTTP API or the client's own SMTP server,
  * picked by `mailProvider` — see the app's `src/lib/mail.ts`.
  *
  * The credentials below are a fallback for local work only. A Sanity dataset
  * is readable by anyone who knows the project id, so in production these
  * belong in the app environment (MAILJET_API_KEY / MAILJET_API_SECRET,
- * SMTP_USER / SMTP_PASSWORD), which wins over whatever is stored here.
+ * RESEND_API_KEY, SMTP_USER / SMTP_PASSWORD), which wins over whatever is stored here.
  */
 type CaptchaProvider = 'none' | 'recaptcha' | 'turnstile'
 
@@ -111,6 +111,7 @@ export const formGeneralSettingsType = defineType({
       options: {
         list: [
           {title: 'Mailjet', value: 'mailjet'},
+          {title: 'Resend', value: 'resend'},
           {title: 'SMTP (own mail server)', value: 'smtp'},
         ],
         layout: 'radio',
@@ -132,6 +133,14 @@ export const formGeneralSettingsType = defineType({
       group: 'mail',
       description: 'Fallback only — prefer MAILJET_API_SECRET in the app environment.',
       hidden: ({document}) => (document?.mailProvider ?? 'mailjet') !== 'mailjet',
+    }),
+    defineField({
+      name: 'resendApiKey',
+      title: 'Resend API key',
+      type: 'string',
+      group: 'mail',
+      description: 'Fallback only — prefer RESEND_API_KEY in the app environment.',
+      hidden: ({document}) => document?.mailProvider !== 'resend',
     }),
     defineField({
       name: 'smtpHost',

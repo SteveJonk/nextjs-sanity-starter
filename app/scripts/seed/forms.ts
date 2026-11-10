@@ -6,7 +6,7 @@
  * the seed updates it in place.
  *
  * The mail credentials are deliberately NOT seeded: they belong in `app/.env`
- * as MAILJET_API_KEY / MAILJET_API_SECRET, which the submit route prefers over
+ * as MAILJET_API_KEY / MAILJET_API_SECRET (or RESEND_API_KEY), which the submit route prefers over
  * anything stored in the dataset.
  */
 import {CONTACT_FORM_FIELDS} from '../../src/lib/demo-content'

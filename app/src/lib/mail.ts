@@ -3,8 +3,9 @@ import { SITE_DEFAULTS } from '@/lib/site';
 import type { FORM_SETTINGS_QUERY_RESULT } from '@/sanity/sanity.types';
 
 /**
- * Mail sending for `/api/submit-form` and `/api/test-mail`: Mailjet's HTTP API
- * or the client's own SMTP server, picked by Form settings → Mail provider.
+ * Mail sending for `/api/submit-form` and `/api/test-mail`: Mailjet's or
+ * Resend's HTTP API, or the client's own SMTP server, picked by Form settings →
+ * Mail provider.
  *
  * Env wins over the studio settings throughout: a dataset is readable by
  * anyone with the project id, so credentials belong in the environment.
@@ -25,6 +26,7 @@ export type SmtpSecurity = 'ssl' | 'starttls' | 'none';
 
 export type MailTransport =
   | { provider: 'mailjet'; apiKey: string; apiSecret: string }
+  | { provider: 'resend'; apiKey: string }
   | {
       provider: 'smtp';
       host: string;
@@ -72,6 +74,35 @@ async function sendViaMailjet(
   }
 }
 
+/** Sends via Resend's HTTP API. Throws on a non-2xx response. */
+async function sendViaResend({ apiKey }: { apiKey: string }, message: MailMessage) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      // Resend takes one "Name <address>" string; strip what would break it.
+      from: `${message.fromName.replace(/[<>"]/g, '')} <${message.fromEmail}>`,
+      to: message.to,
+      ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+      subject: message.subject,
+      html: message.html,
+      text: message.text,
+      attachments: message.attachments.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content.toString('base64'),
+      })),
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`Resend responded ${response.status}: ${body}`);
+  }
+}
+
 /** Default port per encryption, used when the studio leaves Port empty. */
 const SMTP_PORTS: Record<SmtpSecurity, number> = { ssl: 465, starttls: 587, none: 25 };
 
@@ -111,9 +142,9 @@ async function sendViaSmtp(
 
 /** The one place that knows which providers exist. */
 export function sendMail(transport: MailTransport, message: MailMessage) {
-  return transport.provider === 'smtp'
-    ? sendViaSmtp(transport, message)
-    : sendViaMailjet(transport, message);
+  if (transport.provider === 'smtp') return sendViaSmtp(transport, message);
+  if (transport.provider === 'resend') return sendViaResend(transport, message);
+  return sendViaMailjet(transport, message);
 }
 
 /**
@@ -147,6 +178,10 @@ export function resolveMailSettings(settings: FORM_SETTINGS_QUERY_RESULT | null)
         password,
       };
     }
+  } else if (provider === 'resend') {
+    const apiKey = process.env.RESEND_API_KEY || settings?.resendApiKey;
+    if (!apiKey) missing.push('RESEND_API_KEY');
+    else transport = { provider, apiKey };
   } else {
     const apiKey = process.env.MAILJET_API_KEY || settings?.mailjetApiKey;
     const apiSecret = process.env.MAILJET_API_SECRET || settings?.mailjetApiSecret;
@@ -156,7 +191,7 @@ export function resolveMailSettings(settings: FORM_SETTINGS_QUERY_RESULT | null)
   }
 
   const adminEmail = process.env.CONTACT_ADMIN_EMAIL || settings?.adminEmail;
-  // Mailjet and most SMTP servers only accept a sender they know; fall back to
+  // Mailjet, Resend and most SMTP servers only accept a sender they know; fall back to
   // the recipient, which is the one address known to belong to this account.
   const fromEmail =
     process.env.MAIL_FROM_EMAIL ||

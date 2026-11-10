@@ -192,6 +192,7 @@ export const FORM_SETTINGS_QUERY = defineQuery(`
     mailProvider,
     mailjetApiKey,
     mailjetApiSecret,
+    resendApiKey,
     smtpHost,
     smtpPort,
     smtpSecurity,
